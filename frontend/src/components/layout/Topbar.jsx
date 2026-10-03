@@ -2,10 +2,9 @@ import {
   Search,
   Bell,
   ChevronDown,
-  Menu,
 } from "lucide-react";
 
-function Topbar({ onMenuClick }) {
+function Topbar() {
   return (
     <header
       className="
@@ -13,62 +12,35 @@ function Topbar({ onMenuClick }) {
         top-0
         z-30
         flex
-        h-20
+        h-[86px]
         items-center
         justify-between
         border-b
-        border-slate-200
-        bg-white/95
-        px-4
-        backdrop-blur
-        sm:px-6
-        lg:px-8
+        border-[#E5E7EB]
+        bg-white
+        px-8
       "
     >
 
-      {/* MOBILE MENU */}
-
-      <button
-        onClick={onMenuClick}
-        className="
-          mr-3
-          flex
-          h-10
-          w-10
-          items-center
-          justify-center
-          rounded-xl
-          text-slate-600
-          hover:bg-slate-100
-          lg:hidden
-        "
-      >
-        <Menu size={21} />
-      </button>
-
-
-      {/* SEARCH */}
-
+      {/* Search */}
       <div
         className="
-          hidden
-          h-11
-          w-full
-          max-w-[420px]
+          flex
+          h-12
+          w-[450px]
           items-center
           gap-3
           rounded-xl
           border
-          border-slate-200
-          bg-slate-50
+          border-[#E2E8F0]
+          bg-[#F8FAFC]
           px-4
-          md:flex
         "
       >
 
         <Search
-          size={18}
-          className="text-slate-400"
+          size={19}
+          className="text-[#8FA3BA]"
         />
 
         <input
@@ -78,24 +50,22 @@ function Topbar({ onMenuClick }) {
             w-full
             bg-transparent
             text-sm
-            text-slate-700
+            text-[#11161A]
             outline-none
-            placeholder:text-slate-400
+            placeholder:text-[#8FA3BA]
           "
         />
 
         <span
           className="
-            hidden
             rounded-md
             border
-            border-slate-200
+            border-[#E2E8F0]
             bg-white
             px-2
             py-1
-            text-[10px]
-            text-slate-400
-            lg:block
+            text-xs
+            text-[#8FA3BA]
           "
         >
           /
@@ -103,103 +73,80 @@ function Topbar({ onMenuClick }) {
 
       </div>
 
+      {/* Right */}
+      <div className="flex items-center gap-6">
 
-      <div className="ml-auto flex items-center gap-3 sm:gap-5">
-
-        {/* NOTIFICATION */}
-
+        {/* Notification */}
         <button
           className="
             relative
-            flex
-            h-10
-            w-10
-            items-center
-            justify-center
             rounded-xl
-            text-slate-500
+            p-2
+            text-[#60758F]
             transition
-            hover:bg-slate-100
-            hover:text-shop-black
+            hover:bg-[#FFF8E5]
           "
         >
-
-          <Bell size={19} />
+          <Bell size={21} />
 
           <span
             className="
               absolute
-              right-2
-              top-2
+              right-1
+              top-1
               h-2
               w-2
               rounded-full
               bg-red-500
-              ring-2
-              ring-white
             "
           />
-
         </button>
 
-
-        {/* PROFILE */}
-
+        {/* Admin */}
         <button
           className="
             flex
             items-center
-            gap-2
+            gap-3
             rounded-xl
-            p-1.5
+            px-2
+            py-2
             transition
-            hover:bg-slate-50
+            hover:bg-[#F8FAFC]
           "
         >
 
           <div
             className="
               flex
-              h-10
-              w-10
+              h-11
+              w-11
               items-center
               justify-center
               rounded-full
-              bg-shop-gold
-              text-sm
+              bg-[#F2C94C]
               font-bold
-              text-shop-black
+              text-[#11161A]
             "
           >
             A
           </div>
 
-          <div className="hidden text-left sm:block">
+          <div className="text-left">
 
-            <p
-              className="
-                text-sm
-                font-semibold
-                text-shop-text
-              "
-            >
+            <p className="text-sm font-bold text-[#11161A]">
               Admin
             </p>
 
-            <p
-              className="
-                text-[11px]
-                text-shop-muted
-              "
-            >
+            <p className="text-xs text-[#6B84A3]">
               admin@gmail.com
             </p>
 
           </div>
 
           <ChevronDown
-            size={15}
-            className="text-slate-400"
+            size={17}
+            className="text-[#8FA3BA]"
           />
 
         </button>

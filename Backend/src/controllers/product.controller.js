@@ -1,4 +1,10 @@
 const Product = require("../models/Product");
+const {
+  lookupExternalBarcode,
+} = require("../services/barcode.service");
+const {
+  normalizeProductWithAI,
+} = require("../services/productAI.service");
 
 // Create Product
 const createProduct = async (req, res) => {
@@ -175,6 +181,210 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+const scanProductBarcode = async (req, res) => {
+  try {
+    const { barcode } = req.body;
+
+    // =====================================
+    // VALIDATE BARCODE
+    // =====================================
+
+    if (!barcode || !String(barcode).trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Barcode is required",
+      });
+    }
+
+    const cleanBarcode =
+      String(barcode).trim();
+
+    console.log(
+      "Processing barcode:",
+      cleanBarcode
+    );
+
+    // =====================================
+    // 1. CHECK MONGODB
+    // =====================================
+
+    const existingProduct =
+      await Product.findOne({
+        barcode: cleanBarcode,
+        isActive: true,
+      });
+
+    if (existingProduct) {
+      console.log(
+        "Product found in MongoDB"
+      );
+
+      return res.status(200).json({
+        success: true,
+
+        found: true,
+
+        source: "database",
+
+        message:
+          "Product found in your database",
+
+        product: existingProduct,
+      });
+    }
+
+    // =====================================
+    // 2. EXTERNAL BARCODE DATABASE
+    // =====================================
+
+    console.log(
+      "Product not found locally."
+    );
+
+    console.log(
+      "Searching external product database..."
+    );
+
+    const externalData =
+      await lookupExternalBarcode(
+        cleanBarcode
+      );
+
+    if (
+      !externalData ||
+      !externalData.items ||
+      externalData.items.length === 0
+    ) {
+      console.log(
+        "Product not found externally."
+      );
+
+      return res.status(200).json({
+        success: true,
+
+        found: false,
+
+        source: null,
+
+        barcode: cleanBarcode,
+
+        message:
+          "Product not found in external database",
+      });
+    }
+
+    // =====================================
+    // 3. GET EXTERNAL PRODUCT
+    // =====================================
+
+    const externalProduct =
+      externalData.items[0];
+
+    console.log(
+      "External product found:",
+      externalProduct.title
+    );
+
+    // =====================================
+    // 4. SEND DATA TO GROQ
+    // =====================================
+
+    console.log(
+      "Sending product information to Groq..."
+    );
+
+    const aiProduct =
+      await normalizeProductWithAI(
+        externalProduct,
+        cleanBarcode
+      );
+
+    // =====================================
+    // 5. BUILD FINAL PRODUCT
+    // =====================================
+
+    const finalProduct = {
+      barcode: cleanBarcode,
+
+      brand:
+        aiProduct?.brand ||
+        externalProduct.brand ||
+        "",
+
+      model:
+        aiProduct?.model ||
+        externalProduct.model ||
+        "",
+
+      category:
+        aiProduct?.category ||
+        "MOBILE",
+
+      ram:
+        aiProduct?.ram || "",
+
+      storage:
+        aiProduct?.storage || "",
+
+      color:
+        aiProduct?.color || "",
+
+      // Shop-specific values remain empty
+      purchasePrice: "",
+
+      sellingPrice: "",
+
+      warranty:
+        "No Warranty",
+
+      guarantee:
+        "No Guarantee",
+
+      description:
+        aiProduct?.description ||
+        externalProduct.description ||
+        "",
+
+      image:
+        externalProduct.images?.[0] ||
+        "",
+    };
+
+    // =====================================
+    // 6. RETURN TO FRONTEND
+    // =====================================
+
+    return res.status(200).json({
+      success: true,
+
+      found: true,
+
+      source: aiProduct
+        ? "external+groq"
+        : "external",
+
+      message: aiProduct
+        ? "Product found and processed with Groq AI"
+        : "Product found from external database",
+
+      product: finalProduct,
+    });
+  } catch (error) {
+    console.error(
+      "Scan Product Barcode Error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+
+      message:
+        "Failed to process barcode",
+
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
   createProduct,
@@ -182,4 +392,5 @@ module.exports = {
   getProductById,
   updateProduct,
   deleteProduct,
+  scanProductBarcode,
 };

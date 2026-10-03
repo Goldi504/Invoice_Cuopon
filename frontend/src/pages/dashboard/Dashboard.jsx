@@ -1,5 +1,6 @@
+import React, { useEffect, useMemo, useState } from "react";
+
 import {
-  Bell,
   CalendarDays,
   ChevronDown,
   ShoppingCart,
@@ -7,278 +8,537 @@ import {
   Package,
   AlertCircle,
   ArrowUpRight,
-  ArrowDownRight,
-  MoreHorizontal,
+  RefreshCw,
+  Smartphone,
 } from "lucide-react";
 
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+  getDashboardSummary,
+  getTodaySales,
+  getRecentSales,
+  getStockSummary,
+  getCustomerStatistics,
+  getMonthlySales,
+} from "../../services/dashboard.api";
 
-import { motion } from "framer-motion";
 
-const salesData = [
-  { month: "Jan", sales: 18000 },
-  { month: "Feb", sales: 27000 },
-  { month: "Mar", sales: 39000 },
-  { month: "Apr", sales: 33000 },
-  { month: "May", sales: 50000 },
-  { month: "Jun", sales: 43000 },
-  { month: "Jul", sales: 47000 },
-  { month: "Aug", sales: 59000 },
-  { month: "Sep", sales: 58000 },
+const monthNames = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
-const products = [
-  {
-    name: "iPhone 15",
-    sold: 25,
-    price: "₹79,900",
-    image: "📱",
-  },
-  {
-    name: "Samsung Galaxy S24",
-    sold: 18,
-    price: "₹64,999",
-    image: "📱",
-  },
-  {
-    name: "OnePlus 12",
-    sold: 15,
-    price: "₹54,999",
-    image: "📱",
-  },
-  {
-    name: "Redmi Note 13",
-    sold: 12,
-    price: "₹19,999",
-    image: "📱",
-  },
-  {
-    name: "Realme 12 Pro",
-    sold: 10,
-    price: "₹24,999",
-    image: "📱",
-  },
-];
 
-const stats = [
-  {
-    title: "Total Sales",
-    value: "₹1,45,000",
-    change: "+12%",
-    description: "from last week",
-    icon: ShoppingCart,
-    type: "blue",
-    positive: true,
-  },
-  {
-    title: "Total Customers",
-    value: "256",
-    change: "+8%",
-    description: "from last week",
-    icon: Users,
-    type: "green",
-    positive: true,
-  },
-  {
-    title: "Total Products",
-    value: "1,120",
-    change: "+5%",
-    description: "from last week",
-    icon: Package,
-    type: "yellow",
-    positive: true,
-  },
-  {
-    title: "Low Stock Items",
-    value: "42",
-    change: "+18%",
-    description: "from last week",
-    icon: AlertCircle,
-    type: "red",
-    positive: false,
-  },
-];
+const formatMoney = (value) => {
+  return `₹${Number(value || 0).toLocaleString("en-IN")}`;
+};
+
+
+const formatNumber = (value) => {
+  return Number(value || 0).toLocaleString("en-IN");
+};
+
 
 function Dashboard() {
+  const [summary, setSummary] = useState(null);
+  const [todaySales, setTodaySales] = useState(null);
+  const [recentSales, setRecentSales] = useState([]);
+  const [stockSummary, setStockSummary] = useState([]);
+  const [customerStats, setCustomerStats] = useState(null);
+  const [monthlySales, setMonthlySales] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
+
+
+  // =====================================================
+  // LOAD DASHBOARD
+  // =====================================================
+
+  const loadDashboard = async (refresh = false) => {
+    try {
+      setError("");
+
+      if (refresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      const [
+        summaryResponse,
+        todayResponse,
+        recentResponse,
+        stockResponse,
+        customerResponse,
+        monthlyResponse,
+      ] = await Promise.all([
+        getDashboardSummary(),
+        getTodaySales(),
+        getRecentSales(10),
+        getStockSummary(),
+        getCustomerStatistics(),
+        getMonthlySales(),
+      ]);
+
+
+      // -------------------------------
+      // SUMMARY
+      // -------------------------------
+
+      setSummary(
+        summaryResponse?.summary || {}
+      );
+
+
+      // -------------------------------
+      // TODAY SALES
+      // -------------------------------
+
+      setTodaySales(
+        todayResponse || {}
+      );
+
+
+      // -------------------------------
+      // RECENT SALES
+      // -------------------------------
+
+      setRecentSales(
+        recentResponse?.sales || []
+      );
+
+
+      // -------------------------------
+      // STOCK
+      // -------------------------------
+
+      setStockSummary(
+        stockResponse?.stock || []
+      );
+
+
+      // -------------------------------
+      // CUSTOMERS
+      // -------------------------------
+
+      setCustomerStats(
+        customerResponse?.customers || {}
+      );
+
+
+      // -------------------------------
+      // MONTHLY SALES
+      // -------------------------------
+
+      setMonthlySales(
+        monthlyResponse?.monthlySales || []
+      );
+
+    } catch (err) {
+
+      console.error(
+        "Dashboard loading error:",
+        err
+      );
+
+      setError(
+        err?.response?.data?.message ||
+        "Failed to load dashboard."
+      );
+
+    } finally {
+
+      setLoading(false);
+      setRefreshing(false);
+
+    }
+  };
+
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+
+  // =====================================================
+  // REAL BACKEND VALUES
+  // =====================================================
+
+  const totalCustomers =
+    summary?.totalCustomers || 0;
+
+  const availableStock =
+    summary?.availableStock || 0;
+
+  const soldStock =
+    summary?.soldStock || 0;
+
+  const totalSales =
+    summary?.totalSales || 0;
+
+  const totalRevenue =
+    summary?.totalRevenue || 0;
+
+
+  // =====================================================
+  // TOTAL INVENTORY
+  //
+  // Your backend gives availableStock + soldStock.
+  // =====================================================
+
+  const totalProducts =
+    Number(availableStock) +
+    Number(soldStock);
+
+
+  // =====================================================
+  // STOCK
+  // =====================================================
+
+  const lowStockCount = stockSummary.find(
+    (item) =>
+      item._id === "LOW_STOCK"
+  )?.count || 0;
+
+
+  // =====================================================
+  // TOP PRODUCTS
+  //
+  // Your current backend does NOT have a top-product
+  // endpoint.
+  //
+  // For now we derive product sales from recent sales.
+  // =====================================================
+
+  const topProducts = useMemo(() => {
+
+    const productMap = {};
+
+    recentSales.forEach((sale) => {
+
+      const product = sale.product;
+
+      if (!product) return;
+
+      const productId =
+        product._id || product.id;
+
+      if (!productId) return;
+
+      const productName =
+        product.model ||
+        product.name ||
+        "Mobile";
+
+      if (!productMap[productId]) {
+
+        productMap[productId] = {
+          id: productId,
+          name: productName,
+          sold: 0,
+        };
+
+      }
+
+      productMap[productId].sold += 1;
+
+    });
+
+
+    return Object.values(productMap)
+      .sort(
+        (a, b) =>
+          b.sold - a.sold
+      )
+      .slice(0, 5);
+
+  }, [recentSales]);
+
+
+  // =====================================================
+  // CHART DATA
+  // =====================================================
+
+  const chartData = useMemo(() => {
+
+    const data = Array.from(
+      { length: 12 },
+      (_, index) => {
+
+        const found =
+          monthlySales.find(
+            (item) =>
+              item?._id?.month ===
+              index + 1
+          );
+
+        return {
+          month: monthNames[index],
+          revenue:
+            found?.revenue || 0,
+        };
+
+      }
+    );
+
+    return data;
+
+  }, [monthlySales]);
+
+
+  // =====================================================
+  // MAX CHART VALUE
+  // =====================================================
+
+  const maxRevenue =
+    Math.max(
+      ...chartData.map(
+        (item) => item.revenue
+      ),
+      1
+    );
+
+
+  // =====================================================
+  // LOADING
+  // =====================================================
+
+  if (loading) {
+
+    return (
+      <div className="space-y-6">
+
+        <div className="h-9 w-48 animate-pulse rounded-lg bg-slate-200" />
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+          {[1, 2, 3, 4].map((item) => (
+            <div
+              key={item}
+              className="
+                h-36
+                animate-pulse
+                rounded-2xl
+                bg-white
+              "
+            />
+          ))}
+
+        </div>
+
+
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+
+          <div
+            className="
+              h-[420px]
+              animate-pulse
+              rounded-2xl
+              bg-white
+              xl:col-span-2
+            "
+          />
+
+          <div
+            className="
+              h-[420px]
+              animate-pulse
+              rounded-2xl
+              bg-white
+            "
+          />
+
+        </div>
+
+      </div>
+    );
+  }
+
+
+  // =====================================================
+  // ERROR
+  // =====================================================
+
+  if (error) {
+
+    return (
+      <div className="flex min-h-[500px] items-center justify-center">
+
+        <div className="text-center">
+
+          <div
+            className="
+              mx-auto
+              flex
+              h-14
+              w-14
+              items-center
+              justify-center
+              rounded-2xl
+              bg-red-50
+            "
+          >
+            <AlertCircle
+              size={25}
+              className="text-red-500"
+            />
+          </div>
+
+
+          <h2
+            className="
+              mt-4
+              text-lg
+              font-bold
+              text-slate-950
+            "
+          >
+            Dashboard could not load
+          </h2>
+
+
+          <p
+            className="
+              mt-2
+              text-sm
+              text-slate-500
+            "
+          >
+            {error}
+          </p>
+
+
+          <button
+            onClick={() => loadDashboard()}
+            className="
+              mt-5
+              inline-flex
+              items-center
+              gap-2
+              rounded-xl
+              bg-[#F4C64E]
+              px-5
+              py-3
+              text-sm
+              font-bold
+              text-slate-950
+              transition-all
+              duration-300
+              hover:-translate-y-1
+              hover:bg-[#E9B52F]
+              hover:shadow-lg
+            "
+          >
+            <RefreshCw size={16} />
+
+            Try Again
+
+          </button>
+
+        </div>
+
+      </div>
+    );
+  }
+
+
+  // =====================================================
+  // MAIN
+  // =====================================================
+
   return (
-    <div className="min-h-screen bg-shop-cream">
+    <div className="space-y-6">
 
-      {/* =====================================================
-          TOP HEADER
-      ====================================================== */}
+      {/* =================================================
+          PAGE HEADER
+      ================================================= */}
 
-      <header
+      <div
         className="
-          h-20
-          bg-white
-          border-b
-          border-slate-200
           flex
-          items-center
-          justify-between
-          px-6
-          lg:px-8
-          sticky
-          top-0
-          z-30
+          flex-col
+          gap-4
+          sm:flex-row
+          sm:items-center
+          sm:justify-between
         "
       >
 
-        {/* Search */}
+        <div>
 
-        <div
-          className="
-            hidden
-            md:flex
-            items-center
-            w-[360px]
-            h-11
-            rounded-xl
-            bg-slate-50
-            border
-            border-slate-200
-            px-4
-          "
-        >
-          <span className="text-sm text-slate-400">
-            Search customers, products, invoices...
-          </span>
-        </div>
-
-        <div className="flex items-center gap-5 ml-auto">
-
-          {/* Notification */}
-
-          <button
+          <h1
             className="
-              relative
-              h-10
-              w-10
-              rounded-xl
-              flex
-              items-center
-              justify-center
-              text-slate-500
-              hover:bg-slate-100
-              transition
+              text-3xl
+              font-bold
+              tracking-tight
+              text-slate-950
             "
           >
-            <Bell size={19} />
+            Dashboard
+          </h1>
 
-            <span
-              className="
-                absolute
-                right-2
-                top-2
-                h-2
-                w-2
-                rounded-full
-                bg-red-500
-              "
-            />
-          </button>
 
-          {/* User */}
-
-          <div className="flex items-center gap-3">
-
-            <div
-              className="
-                h-10
-                w-10
-                rounded-full
-                bg-shop-gold
-                flex
-                items-center
-                justify-center
-                font-bold
-                text-shop-black
-              "
-            >
-              A
-            </div>
-
-            <div className="hidden sm:block">
-
-              <p
-                className="
-                  text-sm
-                  font-semibold
-                  text-shop-text
-                "
-              >
-                Admin
-              </p>
-
-              <p className="text-xs text-shop-muted">
-                admin@gmail.com
-              </p>
-
-            </div>
-
-            <ChevronDown
-              size={16}
-              className="text-slate-400"
-            />
-
-          </div>
+          <p
+            className="
+              mt-1
+              text-sm
+              text-slate-500
+            "
+          >
+            Good morning, Admin! Here's what's happening today.
+          </p>
 
         </div>
 
-      </header>
 
+        <div className="flex items-center gap-2">
 
-      {/* =====================================================
-          MAIN CONTENT
-      ====================================================== */}
+          {/* REFRESH */}
 
-      <main className="p-6 lg:p-8">
+          <button
+            onClick={() => loadDashboard(true)}
+            disabled={refreshing}
+            className="
+              flex
+              h-11
+              w-11
+              items-center
+              justify-center
+              rounded-xl
+              border
+              border-slate-200
+              bg-white
+              text-slate-500
+              shadow-sm
+              transition-all
+              duration-300
+              hover:-translate-y-1
+              hover:text-slate-900
+              hover:shadow-md
+            "
+          >
 
-        {/* PAGE HEADER */}
+            <RefreshCw
+              size={17}
+              className={
+                refreshing
+                  ? "animate-spin"
+                  : ""
+              }
+            />
 
-        <div
-          className="
-            flex
-            flex-col
-            md:flex-row
-            md:items-center
-            md:justify-between
-            gap-5
-            mb-7
-          "
-        >
-
-          <div>
-
-            <h1
-              className="
-                text-3xl
-                font-extrabold
-                text-shop-text
-              "
-            >
-              Dashboard
-            </h1>
-
-            <p
-              className="
-                mt-1
-                text-sm
-                text-shop-muted
-              "
-            >
-              Good morning, Admin! Here's what's happening today.
-            </p>
-
-          </div>
+          </button>
 
 
           {/* DATE */}
@@ -296,10 +556,13 @@ function Dashboard() {
               py-3
               text-sm
               font-medium
-              text-shop-text
+              text-slate-700
               shadow-sm
-              hover:border-shop-gold
-              transition
+              transition-all
+              duration-300
+              hover:-translate-y-1
+              hover:border-[#F4C64E]
+              hover:shadow-md
             "
           >
 
@@ -307,663 +570,662 @@ function Dashboard() {
 
             30 Sep 2026
 
-            <ChevronDown size={16} />
+            <ChevronDown
+              size={16}
+              className="text-slate-400"
+            />
 
           </button>
 
         </div>
 
-
-        {/* =====================================================
-            STAT CARDS
-        ====================================================== */}
-
-        <div
-          className="
-            grid
-            grid-cols-1
-            sm:grid-cols-2
-            xl:grid-cols-4
-            gap-5
-          "
-        >
-
-          {stats.map((stat, index) => {
-
-            const Icon = stat.icon;
-
-            const bgClasses = {
-              blue: "bg-blue-50",
-              green: "bg-emerald-50",
-              yellow: "bg-amber-50",
-              red: "bg-red-50",
-            };
-
-            const iconClasses = {
-              blue: "text-blue-600",
-              green: "text-emerald-600",
-              yellow: "text-amber-600",
-              red: "text-red-600",
-            };
-
-            return (
-              <motion.div
-                key={stat.title}
-                initial={{
-                  opacity: 0,
-                  y: 20,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                transition={{
-                  delay: index * 0.08,
-                }}
-                whileHover={{
-                  y: -4,
-                }}
-                className="
-                  bg-white
-                  rounded-2xl
-                  border
-                  border-slate-200
-                  p-5
-                  shadow-sm
-                  hover:shadow-card
-                  transition
-                "
-              >
-
-                <div
-                  className="
-                    flex
-                    items-start
-                    justify-between
-                  "
-                >
-
-                  <div>
-
-                    <p className="text-sm text-shop-muted">
-                      {stat.title}
-                    </p>
-
-                    <h2
-                      className="
-                        mt-2
-                        text-2xl
-                        font-extrabold
-                        text-shop-text
-                      "
-                    >
-                      {stat.value}
-                    </h2>
-
-                  </div>
-
-                  <div
-                    className={`
-                      h-11
-                      w-11
-                      rounded-xl
-                      flex
-                      items-center
-                      justify-center
-                      ${bgClasses[stat.type]}
-                    `}
-                  >
-                    <Icon
-                      size={20}
-                      className={iconClasses[stat.type]}
-                    />
-                  </div>
-
-                </div>
+      </div>
 
 
-                <div className="mt-4 flex items-center gap-2">
+      {/* =================================================
+          STAT CARDS
+      ================================================= */}
 
-                  <span
-                    className={`
-                      flex
-                      items-center
-                      gap-1
-                      text-xs
-                      font-semibold
-                      ${
-                        stat.positive
-                          ? "text-emerald-600"
-                          : "text-red-600"
-                      }
-                    `}
-                  >
+      <div
+        className="
+          grid
+          grid-cols-1
+          gap-4
+          sm:grid-cols-2
+          xl:grid-cols-4
+        "
+      >
 
-                    {stat.positive ? (
-                      <ArrowUpRight size={14} />
-                    ) : (
-                      <ArrowDownRight size={14} />
-                    )}
+        {/* SALES */}
 
-                    {stat.change}
-
-                  </span>
-
-                  <span
-                    className="
-                      text-xs
-                      text-shop-muted
-                    "
-                  >
-                    {stat.description}
-                  </span>
-
-                </div>
-
-              </motion.div>
-            );
-          })}
-
-        </div>
+        <StatCard
+          title="Total Sales"
+          value={formatMoney(totalRevenue)}
+          icon={ShoppingCart}
+          iconClass="bg-blue-50 text-blue-600"
+          change="+12%"
+          changeClass="text-emerald-600"
+        />
 
 
-        {/* =====================================================
-            CHART + PRODUCTS
-        ====================================================== */}
+        {/* CUSTOMERS */}
+
+        <StatCard
+          title="Total Customers"
+          value={formatNumber(totalCustomers)}
+          icon={Users}
+          iconClass="bg-emerald-50 text-emerald-600"
+          change={
+            customerStats?.newCustomersToday
+              ? `+${customerStats.newCustomersToday}`
+              : "0"
+          }
+          changeClass="text-emerald-600"
+          changeText="new today"
+        />
+
+
+        {/* PRODUCTS */}
+
+        <StatCard
+          title="Total Products"
+          value={formatNumber(totalProducts)}
+          icon={Package}
+          iconClass="bg-amber-50 text-amber-600"
+          change={formatNumber(availableStock)}
+          changeClass="text-amber-600"
+          changeText="available"
+        />
+
+
+        {/* LOW STOCK */}
+
+        <StatCard
+          title="Low Stock Items"
+          value={formatNumber(lowStockCount)}
+          icon={AlertCircle}
+          iconClass="bg-red-50 text-red-500"
+          change={formatNumber(soldStock)}
+          changeClass="text-red-500"
+          changeText="sold stock"
+        />
+
+      </div>
+
+
+      {/* =================================================
+          SALES + TOP PRODUCTS
+      ================================================= */}
+
+      <div
+        className="
+          grid
+          grid-cols-1
+          gap-6
+          xl:grid-cols-3
+        "
+      >
+
+        {/* =================================================
+            SALES OVERVIEW
+        ================================================= */}
 
         <div
           className="
-            mt-6
-            grid
-            grid-cols-1
-            xl:grid-cols-[1.6fr_1fr]
-            gap-6
-          "
-        >
-
-          {/* SALES CHART */}
-
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 20,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              delay: 0.35,
-            }}
-            className="
-              rounded-2xl
-              border
-              border-slate-200
-              bg-white
-              p-6
-              shadow-sm
-            "
-          >
-
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-                mb-5
-              "
-            >
-
-              <div>
-
-                <h2
-                  className="
-                    text-lg
-                    font-bold
-                    text-shop-text
-                  "
-                >
-                  Sales Overview
-                </h2>
-
-                <p
-                  className="
-                    mt-1
-                    text-xs
-                    text-shop-muted
-                  "
-                >
-                  Monthly sales performance
-                </p>
-
-              </div>
-
-              <button
-                className="
-                  flex
-                  items-center
-                  gap-2
-                  rounded-lg
-                  border
-                  border-slate-200
-                  px-3
-                  py-2
-                  text-xs
-                  font-medium
-                  text-slate-600
-                  hover:border-shop-gold
-                  transition
-                "
-              >
-                This Month
-                <ChevronDown size={14} />
-              </button>
-
-            </div>
-
-
-            <div className="h-[310px]">
-
-              <ResponsiveContainer
-                width="100%"
-                height="100%"
-              >
-
-                <LineChart
-                  data={salesData}
-                  margin={{
-                    top: 10,
-                    right: 10,
-                    left: -20,
-                    bottom: 0,
-                  }}
-                >
-
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#e2e8f0"
-                  />
-
-                  <XAxis
-                    dataKey="month"
-                    tick={{
-                      fontSize: 12,
-                      fill: "#64748b",
-                    }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-
-                  <YAxis
-                    tick={{
-                      fontSize: 11,
-                      fill: "#64748b",
-                    }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(value) =>
-                      `${value / 1000}K`
-                    }
-                  />
-
-                  <Tooltip
-                    formatter={(value) =>
-                      `₹${Number(value).toLocaleString("en-IN")}`
-                    }
-                    contentStyle={{
-                      borderRadius: "12px",
-                      border: "1px solid #e2e8f0",
-                    }}
-                  />
-
-                  <Line
-                    type="monotone"
-                    dataKey="sales"
-                    stroke="#2563eb"
-                    strokeWidth={3}
-                    dot={{
-                      r: 4,
-                      fill: "#2563eb",
-                    }}
-                    activeDot={{
-                      r: 6,
-                    }}
-                  />
-
-                </LineChart>
-
-              </ResponsiveContainer>
-
-            </div>
-
-          </motion.div>
-
-
-          {/* TOP PRODUCTS */}
-
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 20,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              delay: 0.45,
-            }}
-            className="
-              rounded-2xl
-              border
-              border-slate-200
-              bg-white
-              p-6
-              shadow-sm
-            "
-          >
-
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-                mb-5
-              "
-            >
-
-              <div>
-
-                <h2
-                  className="
-                    text-lg
-                    font-bold
-                    text-shop-text
-                  "
-                >
-                  Top Selling Products
-                </h2>
-
-                <p
-                  className="
-                    mt-1
-                    text-xs
-                    text-shop-muted
-                  "
-                >
-                  Best performing products
-                </p>
-
-              </div>
-
-              <button
-                className="
-                  text-xs
-                  font-semibold
-                  text-shop-black
-                  hover:text-shop-gold
-                  transition
-                "
-              >
-                View All
-              </button>
-
-            </div>
-
-
-            <div className="space-y-4">
-
-              {products.map((product, index) => (
-
-                <motion.div
-                  key={product.name}
-                  whileHover={{
-                    x: 4,
-                  }}
-                  className="
-                    flex
-                    items-center
-                    gap-3
-                    group
-                  "
-                >
-
-                  {/* PRODUCT IMAGE */}
-
-                  <div
-                    className="
-                      h-11
-                      w-11
-                      rounded-xl
-                      bg-slate-100
-                      flex
-                      items-center
-                      justify-center
-                      text-xl
-                    "
-                  >
-                    {product.image}
-                  </div>
-
-
-                  {/* DETAILS */}
-
-                  <div className="flex-1 min-w-0">
-
-                    <div
-                      className="
-                        flex
-                        items-center
-                        justify-between
-                        gap-2
-                      "
-                    >
-
-                      <p
-                        className="
-                          truncate
-                          text-sm
-                          font-semibold
-                          text-shop-text
-                        "
-                      >
-                        {product.name}
-                      </p>
-
-                      <span
-                        className="
-                          whitespace-nowrap
-                          text-xs
-                          font-semibold
-                          text-shop-muted
-                        "
-                      >
-                        {product.sold} sold
-                      </span>
-
-                    </div>
-
-
-                    {/* PROGRESS */}
-
-                    <div
-                      className="
-                        mt-2
-                        h-1.5
-                        w-full
-                        rounded-full
-                        bg-slate-100
-                        overflow-hidden
-                      "
-                    >
-
-                      <motion.div
-                        initial={{
-                          width: 0,
-                        }}
-                        animate={{
-                          width: `${product.sold * 3.5}%`,
-                        }}
-                        transition={{
-                          delay: 0.5 + index * 0.1,
-                          duration: 0.7,
-                        }}
-                        className="
-                          h-full
-                          rounded-full
-                          bg-shop-gold
-                        "
-                      />
-
-                    </div>
-
-                  </div>
-
-                </motion.div>
-
-              ))}
-
-            </div>
-
-
-            <button
-              className="
-                mt-5
-                flex
-                w-full
-                items-center
-                justify-center
-                gap-2
-                rounded-xl
-                bg-shop-black
-                py-3
-                text-sm
-                font-semibold
-                text-white
-                transition
-                hover:bg-shop-dark
-              "
-            >
-              View All Products
-              <ArrowUpRight size={16} />
-            </button>
-
-          </motion.div>
-
-        </div>
-
-
-        {/* =====================================================
-            QUICK SUMMARY
-        ====================================================== */}
-
-        <div
-          className="
-            mt-6
             rounded-2xl
             border
-            border-shop-gold/20
-            bg-shop-black
+            border-slate-200
+            bg-white
             p-6
-            text-white
-            overflow-hidden
-            relative
+            shadow-sm
+            transition-all
+            duration-300
+            hover:-translate-y-1
+            hover:shadow-lg
+            xl:col-span-2
           "
         >
 
-          {/* GOLD GLOW */}
-
           <div
             className="
-              absolute
-              -right-20
-              -top-20
-              h-48
-              w-48
-              rounded-full
-              bg-shop-gold/10
-              blur-3xl
-            "
-          />
-
-          <div
-            className="
-              relative
               flex
-              flex-col
-              md:flex-row
-              md:items-center
-              md:justify-between
-              gap-5
+              items-start
+              justify-between
             "
           >
 
             <div>
 
-              <p
+              <h2
                 className="
-                  text-xs
-                  uppercase
-                  tracking-wider
-                  text-shop-gold
-                "
-              >
-                Shop Performance
-              </p>
-
-              <h3
-                className="
-                  mt-2
-                  text-xl
+                  text-lg
                   font-bold
+                  text-slate-950
                 "
               >
-                Your shop is growing steadily.
-              </h3>
+                Sales Overview
+              </h2>
+
 
               <p
                 className="
                   mt-1
                   text-sm
-                  text-slate-400
+                  text-slate-500
                 "
               >
-                Keep your inventory updated and monitor
-                low-stock products regularly.
+                Monthly sales performance
               </p>
 
             </div>
+
 
             <button
               className="
                 flex
                 items-center
-                justify-center
                 gap-2
-                rounded-xl
-                bg-shop-gold
-                px-5
-                py-3
-                text-sm
-                font-bold
-                text-shop-black
-                transition
-                hover:scale-[1.02]
-                active:scale-[0.98]
+                rounded-lg
+                border
+                border-slate-200
+                px-3
+                py-2
+                text-xs
+                font-medium
+                text-slate-600
+                transition-all
+                duration-300
+                hover:border-[#F4C64E]
+                hover:bg-[#FFF9E8]
               "
             >
-              View Reports
-              <ArrowUpRight size={17} />
+              This Year
+              <ChevronDown size={14} />
             </button>
+
+          </div>
+
+
+          {/* CHART */}
+
+          <div className="mt-8 h-[300px]">
+
+            <svg
+              viewBox="0 0 800 300"
+              className="h-full w-full"
+              preserveAspectRatio="none"
+            >
+
+              {/* GRID */}
+
+              {[50, 100, 150, 200, 250].map(
+                (y) => (
+
+                  <line
+                    key={y}
+                    x1="45"
+                    y1={y}
+                    x2="775"
+                    y2={y}
+                    stroke="#E2E8F0"
+                    strokeDasharray="5 5"
+                  />
+
+                )
+              )}
+
+
+              {/* GRAPH */}
+
+              {(() => {
+
+                const points =
+                  chartData.map(
+                    (item, index) => {
+
+                      const x =
+                        chartData.length === 1
+                          ? 400
+                          : 45 +
+                            (index *
+                              730) /
+                              11;
+
+                      const y =
+                        255 -
+                        (item.revenue /
+                          maxRevenue) *
+                          205;
+
+                      return `${x},${y}`;
+
+                    }
+                  );
+
+
+                return (
+                  <>
+                    <polyline
+                      points={points.join(" ")}
+                      fill="none"
+                      stroke="#2563EB"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+
+
+                    {chartData.map(
+                      (item, index) => {
+
+                        const x =
+                          45 +
+                          (index *
+                            730) /
+                            11;
+
+                        const y =
+                          255 -
+                          (item.revenue /
+                            maxRevenue) *
+                            205;
+
+                        return (
+                          <circle
+                            key={index}
+                            cx={x}
+                            cy={y}
+                            r="5"
+                            fill="white"
+                            stroke="#2563EB"
+                            strokeWidth="4"
+                            className="
+                              transition-all
+                              duration-300
+                              hover:r-8
+                            "
+                          />
+                        );
+
+                      }
+                    )}
+
+                  </>
+                );
+
+              })()}
+
+            </svg>
+
+
+            {/* MONTHS */}
+
+            <div
+              className="
+                mt-2
+                flex
+                justify-between
+                px-8
+              "
+            >
+
+              {chartData.map(
+                (item) => (
+
+                  <span
+                    key={item.month}
+                    className="
+                      text-[11px]
+                      text-slate-400
+                    "
+                  >
+                    {item.month}
+                  </span>
+
+                )
+              )}
+
+            </div>
 
           </div>
 
         </div>
 
-      </main>
+
+        {/* =================================================
+            TOP SELLING PRODUCTS
+        ================================================= */}
+
+        <div
+          className="
+            rounded-2xl
+            border
+            border-slate-200
+            bg-white
+            p-6
+            shadow-sm
+            transition-all
+            duration-300
+            hover:-translate-y-1
+            hover:shadow-lg
+          "
+        >
+
+          <div
+            className="
+              flex
+              items-start
+              justify-between
+            "
+          >
+
+            <div>
+
+              <h2
+                className="
+                  text-lg
+                  font-bold
+                  text-slate-950
+                "
+              >
+                Top Selling Products
+              </h2>
+
+
+              <p
+                className="
+                  mt-1
+                  text-sm
+                  text-slate-500
+                "
+              >
+                Based on recent completed sales
+              </p>
+
+            </div>
+
+
+            <button
+              className="
+                text-sm
+                font-semibold
+                text-slate-950
+                transition
+                hover:text-[#D99E00]
+              "
+            >
+              View All
+            </button>
+
+          </div>
+
+
+          <div className="mt-6 space-y-5">
+
+            {topProducts.length === 0 ? (
+
+              <div
+                className="
+                  py-12
+                  text-center
+                  text-sm
+                  text-slate-400
+                "
+              >
+                No sales available
+              </div>
+
+            ) : (
+
+              topProducts.map(
+                (product, index) => (
+
+                  <div
+                    key={product.id}
+                    className="
+                      group
+                      flex
+                      items-center
+                      gap-3
+                    "
+                  >
+
+                    <div
+                      className="
+                        flex
+                        h-10
+                        w-10
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-xl
+                        bg-slate-50
+                        transition-all
+                        duration-300
+                        group-hover:scale-110
+                        group-hover:bg-blue-50
+                      "
+                    >
+                      <Smartphone
+                        size={19}
+                        className="text-blue-600"
+                      />
+                    </div>
+
+
+                    <div className="min-w-0 flex-1">
+
+                      <div
+                        className="
+                          flex
+                          items-center
+                          justify-between
+                          gap-3
+                        "
+                      >
+
+                        <p
+                          className="
+                            truncate
+                            text-sm
+                            font-semibold
+                            text-slate-900
+                          "
+                        >
+                          {product.name}
+                        </p>
+
+
+                        <span
+                          className="
+                            shrink-0
+                            text-xs
+                            text-slate-500
+                          "
+                        >
+                          {product.sold} sold
+                        </span>
+
+                      </div>
+
+
+                      <div
+                        className="
+                          mt-2
+                          h-1.5
+                          overflow-hidden
+                          rounded-full
+                          bg-slate-100
+                        "
+                      >
+
+                        <div
+                          className="
+                            h-full
+                            rounded-full
+                            bg-[#F4C64E]
+                            transition-all
+                            duration-500
+                            group-hover:bg-[#E9B52F]
+                          "
+                          style={{
+                            width: `${Math.min(
+                              product.sold * 20,
+                              100
+                            )}%`,
+                          }}
+                        />
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                )
+              )
+
+            )}
+
+          </div>
+
+        </div>
+
+      </div>
 
     </div>
   );
 }
+
+
+/* =========================================================
+   STAT CARD
+========================================================= */
+
+function StatCard({
+  title,
+  value,
+  icon: Icon,
+  iconClass,
+  change,
+  changeClass,
+  changeText,
+}) {
+
+  return (
+    <div
+      className="
+        group
+        rounded-2xl
+        border
+        border-slate-200
+        bg-white
+        p-5
+        shadow-sm
+        transition-all
+        duration-300
+        hover:-translate-y-1
+        hover:shadow-lg
+      "
+    >
+
+      <div
+        className="
+          flex
+          items-start
+          justify-between
+        "
+      >
+
+        <div>
+
+          <p
+            className="
+              text-sm
+              text-slate-500
+            "
+          >
+            {title}
+          </p>
+
+
+          <h2
+            className="
+              mt-3
+              text-2xl
+              font-bold
+              text-slate-950
+            "
+          >
+            {value}
+          </h2>
+
+        </div>
+
+
+        <div
+          className={`
+            flex
+            h-11
+            w-11
+            items-center
+            justify-center
+            rounded-xl
+            transition-all
+            duration-300
+            group-hover:scale-110
+            group-hover:rotate-3
+            ${iconClass}
+          `}
+        >
+
+          <Icon size={21} />
+
+        </div>
+
+      </div>
+
+
+      <div
+        className="
+          mt-5
+          flex
+          items-center
+          gap-2
+        "
+      >
+
+        <span
+          className={`
+            flex
+            items-center
+            gap-1
+            text-xs
+            font-bold
+            ${changeClass}
+          `}
+        >
+          <ArrowUpRight size={14} />
+
+          {change}
+
+        </span>
+
+
+        <span
+          className="
+            text-xs
+            text-slate-400
+          "
+        >
+          {changeText || "from last week"}
+        </span>
+
+      </div>
+
+    </div>
+  );
+}
+
 
 export default Dashboard;

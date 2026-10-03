@@ -8,19 +8,27 @@ import {
 import MainLayout from "./components/layout/MainLayout";
 
 import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+
 import Dashboard from "./pages/dashboard/Dashboard";
+import Customers from "./pages/customers/Customers";
+import Products from "./pages/products/Products";
 
 function App() {
   return (
     <BrowserRouter>
-
       <Routes>
 
-        {/* LOGIN */}
+        {/* AUTH */}
 
         <Route
           path="/login"
           element={<Login />}
+        />
+
+        <Route
+          path="/register"
+          element={<Register />}
         />
 
         {/* DASHBOARD */}
@@ -30,6 +38,28 @@ function App() {
           element={
             <MainLayout>
               <Dashboard />
+            </MainLayout>
+          }
+        />
+
+        {/* PRODUCTS */}
+
+        <Route
+          path="/products"
+          element={
+            <MainLayout>
+              <Products />
+            </MainLayout>
+          }
+        />
+
+        {/* CUSTOMERS */}
+
+        <Route
+          path="/customers"
+          element={
+            <MainLayout>
+              <Customers />
             </MainLayout>
           }
         />
@@ -46,8 +76,19 @@ function App() {
           }
         />
 
-      </Routes>
+        {/* UNKNOWN URL */}
 
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/dashboard"
+              replace
+            />
+          }
+        />
+
+      </Routes>
     </BrowserRouter>
   );
 }

@@ -2,6 +2,13 @@ const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema(
   {
+    barcode: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true,
+    },
+
     brand: {
       type: String,
       required: [true, "Brand is required"],
@@ -13,6 +20,7 @@ const productSchema = new mongoose.Schema(
       required: [true, "Model name is required"],
       trim: true,
     },
+
     category: {
       type: String,
       enum: ["MOBILE", "ACCESSORY"],
@@ -28,6 +36,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+
     color: {
       type: String,
       trim: true,
@@ -49,7 +58,8 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: "No Warranty",
     },
-     guarantee: {
+
+    guarantee: {
       type: String,
       default: "No Guarantee",
     },
@@ -69,7 +79,7 @@ const productSchema = new mongoose.Schema(
       default: true,
     },
   },
-   {
+  {
     timestamps: true,
   }
 );

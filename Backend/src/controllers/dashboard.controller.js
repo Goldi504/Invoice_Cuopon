@@ -359,6 +359,233 @@ const getMonthlySales = async (
     });
   }
 };
+// ==========================================
+// LOW STOCK PRODUCTS
+// ==========================================
+
+const getLowStockProducts = async (req, res) => {
+  try {
+    // Default low-stock limit = 5
+    const threshold = Number(req.query.threshold || 5);
+
+    const lowStockProducts = await Inventory.aggregate([
+      // Only count available phones
+      {
+        $match: {
+          status: "AVAILABLE",
+        },
+      },
+
+      // Group inventory by product
+      {
+        $group: {
+          _id: "$product",
+          availableStock: {
+            $sum: 1,
+          },
+        },
+      },
+
+      // Only products whose available stock
+      // is less than or equal to threshold
+      {
+        $match: {
+          availableStock: {
+            $lte: threshold,
+          },
+        },
+      },
+
+      // Get product information
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+
+      // Convert product array to object
+      {
+        $unwind: {
+          path: "$product",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // Return required fields
+      {
+        $project: {
+          _id: 1,
+          availableStock: 1,
+
+          productName: {
+            $ifNull: [
+              "$product.name",
+              {
+                $concat: [
+                  {
+                    $ifNull: [
+                      "$product.brand",
+                      "",
+                    ],
+                  },
+                  " ",
+                  {
+                    $ifNull: [
+                      "$product.model",
+                      "",
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+
+          brand: "$product.brand",
+
+          model: "$product.model",
+        },
+      },
+
+      // Lowest stock first
+      {
+        $sort: {
+          availableStock: 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      threshold,
+      count: lowStockProducts.length,
+      products: lowStockProducts,
+    });
+  } catch (error) {
+    console.error(
+      "Low Stock Products Error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load low stock products",
+      error: error.message,
+    });
+  }
+};
+
+
+// ==========================================
+// TOP SELLING PRODUCTS
+// ==========================================
+
+const getTopSellingProducts = async (req, res) => {
+  try {
+    const limit = Number(
+      req.query.limit || 5
+    );
+
+    const topProducts = await Sale.aggregate([
+      // Only completed and paid sales
+      {
+        $match: {
+          saleStatus: "COMPLETED",
+          paymentStatus: "PAID",
+        },
+      },
+
+      // Group sales by product
+      {
+        $group: {
+          _id: "$product",
+
+          productName: {
+            $first: "$productName",
+          },
+
+          totalSold: {
+            $sum: "$quantity",
+          },
+
+          totalRevenue: {
+            $sum: "$finalAmount",
+          },
+        },
+      },
+
+      // Highest selling product first
+      {
+        $sort: {
+          totalSold: -1,
+        },
+      },
+
+      // Only top products
+      {
+        $limit: limit,
+      },
+
+      // Get product details
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+
+      {
+        $unwind: {
+          path: "$product",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $project: {
+          _id: 1,
+
+          productName: {
+            $ifNull: [
+              "$product.name",
+              "$productName",
+            ],
+          },
+
+          brand: "$product.brand",
+
+          model: "$product.model",
+
+          totalSold: 1,
+
+          totalRevenue: 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: topProducts.length,
+      products: topProducts,
+    });
+  } catch (error) {
+    console.error(
+      "Top Selling Products Error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Failed to load top selling products",
+      error: error.message,
+    });
+  }
+};
 
 
 module.exports = {
@@ -368,4 +595,6 @@ module.exports = {
   getStockSummary,
   getCustomerStatistics,
   getMonthlySales,
+  getLowStockProducts,
+  getTopSellingProducts,
 };

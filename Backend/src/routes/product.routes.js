@@ -8,6 +8,7 @@ const {
   getProductById,
   updateProduct,
   deleteProduct,
+  scanProductBarcode,
 } = require("../controllers/product.controller");
 
 const {
@@ -17,6 +18,7 @@ const {
 const {
   authorize,
 } = require("../middlewares/role.middleware");
+
 
 
 // Both Admin and Employee can view products
@@ -62,6 +64,28 @@ router.delete(
   authorize("ADMIN"),
   deleteProduct
 );
+
+router.get(
+  "/",
+  protect,
+  authorize("ADMIN", "EMPLOYEE"),
+  getProducts
+);
+
+router.post(
+  "/scan",
+  protect,
+  authorize("ADMIN"),
+  scanProductBarcode
+);
+
+router.get(
+  "/:id",
+  protect,
+  authorize("ADMIN", "EMPLOYEE"),
+  getProductById
+);
+
 
 
 module.exports = router;

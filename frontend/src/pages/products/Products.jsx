@@ -2161,80 +2161,185 @@ function Products() {
   // BARCODE SCAN
   // =====================================================
 
-  const handleBarcodeScan = async (barcode) => {
-    try {
-      setShowScanner(false);
+  const handleBarcodeScan = async (scanResult) => {
+  try {
+    setShowScanner(false);
 
-      setScanning(true);
+    setScanning(true);
 
-      setError("");
+    setError("");
 
-      setSuccess("");
+    setSuccess("");
 
-      // Send barcode to backend
-      const data = await scanProductBarcode(barcode);
+    /*
+    ============================================================
+    GET BARCODE + OCR TEXT
+    ============================================================
+    */
 
-      // Product already exists
-      if (data.success && data.found && data.product) {
-        const product = data.product;
+    const barcode =
+      typeof scanResult === "string"
+        ? scanResult
+        : scanResult?.barcode || "";
 
-        setForm({
-          barcode: product.barcode || barcode,
-          brand: product.brand || "",
-          model: product.model || "",
-          category: product.category || "MOBILE",
-          ram: product.ram || "",
-          storage: product.storage || "",
-          color: product.color || "",
-          purchasePrice:
-            product.purchasePrice ?? "",
-          sellingPrice:
-            product.sellingPrice ?? "",
-          warranty:
-            product.warranty || "No Warranty",
-          guarantee:
-            product.guarantee || "No Guarantee",
-          description:
-            product.description || "",
-          image: product.image || "",
-        });
+    const ocrText =
+      typeof scanResult === "string"
+        ? ""
+        : scanResult?.ocrText || "";
 
-        setSuccess(
-          "Product found. Details loaded automatically."
-        );
+    console.log("Barcode:", barcode);
 
-        setShowModal(true);
+    console.log("OCR Text:", ocrText);
 
-        return;
-      }
+    /*
+    ============================================================
+    SEND BOTH TO BACKEND
+    ============================================================
+    */
 
-      // Product doesn't exist
-      setForm((prev) => ({
-        ...prev,
-        barcode,
-      }));
+    const data = await scanProductBarcode(
+      barcode,
+      ocrText
+    );
 
-      setShowModal(true);
+    /*
+    ============================================================
+    PRODUCT FOUND
+    ============================================================
+    */
+
+    if (
+      data.success &&
+      data.found &&
+      data.product
+    ) {
+      const product = data.product;
+
+      setForm({
+        barcode:
+          product.barcode || barcode,
+
+        brand:
+          product.brand || "",
+
+        model:
+          product.model || "",
+
+        category:
+          product.category || "MOBILE",
+
+        ram:
+          product.ram || "",
+
+        storage:
+          product.storage || "",
+
+        color:
+          product.color || "",
+
+        purchasePrice:
+          product.purchasePrice ?? "",
+
+        sellingPrice:
+          product.sellingPrice ?? "",
+
+        warranty:
+          product.warranty ||
+          "No Warranty",
+
+        guarantee:
+          product.guarantee ||
+          "No Guarantee",
+
+        description:
+          product.description || "",
+
+        image:
+          product.image || "",
+      });
 
       setSuccess(
-        "Barcode scanned successfully. Product not found in your database yet."
-      );
-    } catch (err) {
-      console.error(
-        "Barcode Scan Error:",
-        err
-      );
-
-      setError(
-        err?.response?.data?.message ||
-          "Failed to process barcode."
+        data.message ||
+          "Product details detected automatically."
       );
 
       setShowModal(true);
-    } finally {
-      setScanning(false);
+
+      return;
     }
-  };
+
+    /*
+    ============================================================
+    NOT FOUND
+    ============================================================
+    */
+
+    setForm((prev) => ({
+      ...prev,
+
+      barcode:
+        barcode || prev.barcode,
+
+      /*
+      Backend may still return partial
+      OCR information.
+      */
+
+      brand:
+        data.product?.brand ||
+        prev.brand,
+
+      model:
+        data.product?.model ||
+        prev.model,
+
+      category:
+        data.product?.category ||
+        prev.category,
+
+      ram:
+        data.product?.ram ||
+        prev.ram,
+
+      storage:
+        data.product?.storage ||
+        prev.storage,
+
+      color:
+        data.product?.color ||
+        prev.color,
+
+      description:
+        data.product?.description ||
+        prev.description,
+
+      image:
+        data.product?.image ||
+        prev.image,
+    }));
+
+    setShowModal(true);
+
+    setSuccess(
+      data.message ||
+        "Information detected. Please verify the details and enter price."
+    );
+  } catch (err) {
+    console.error(
+      "Product Scan Error:",
+      err
+    );
+
+    setError(
+      err?.response?.data?.message ||
+        "Failed to process product scan."
+    );
+
+    setShowModal(true);
+  } finally {
+    setScanning(false);
+  }
+};
 
 
   // =====================================================

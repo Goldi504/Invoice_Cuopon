@@ -1,6 +1,7 @@
 const express = require("express");
 
-const router = express.Router();
+const router =
+  express.Router();
 
 const {
   createProduct,
@@ -19,58 +20,12 @@ const {
   authorize,
 } = require("../middlewares/role.middleware");
 
-
-
-// Both Admin and Employee can view products
-router.get(
-  "/",
-  protect,
-  authorize("ADMIN", "EMPLOYEE"),
-  getProducts
-);
-
-
-// Get single product
-router.get(
-  "/:id",
-  protect,
-  authorize("ADMIN", "EMPLOYEE"),
-  getProductById
-);
-
-
-// Only Admin can create products
-router.post(
-  "/",
-  protect,
-  authorize("ADMIN"),
-  createProduct
-);
-
-
-// Only Admin can update products
-router.put(
-  "/:id",
-  protect,
-  authorize("ADMIN"),
-  updateProduct
-);
-
-
-// Only Admin can delete products
-router.delete(
-  "/:id",
-  protect,
-  authorize("ADMIN"),
-  deleteProduct
-);
-
-router.get(
-  "/",
-  protect,
-  authorize("ADMIN", "EMPLOYEE"),
-  getProducts
-);
+/*
+============================================================
+SCAN
+IMPORTANT: /scan BEFORE /:id
+============================================================
+*/
 
 router.post(
   "/scan",
@@ -79,13 +34,75 @@ router.post(
   scanProductBarcode
 );
 
+/*
+============================================================
+GET PRODUCTS
+============================================================
+*/
+
+router.get(
+  "/",
+  protect,
+  authorize(
+    "ADMIN",
+    "EMPLOYEE"
+  ),
+  getProducts
+);
+
+/*
+============================================================
+GET SINGLE PRODUCT
+============================================================
+*/
+
 router.get(
   "/:id",
   protect,
-  authorize("ADMIN", "EMPLOYEE"),
+  authorize(
+    "ADMIN",
+    "EMPLOYEE"
+  ),
   getProductById
 );
 
+/*
+============================================================
+CREATE
+============================================================
+*/
 
+router.post(
+  "/",
+  protect,
+  authorize("ADMIN"),
+  createProduct
+);
+
+/*
+============================================================
+UPDATE
+============================================================
+*/
+
+router.put(
+  "/:id",
+  protect,
+  authorize("ADMIN"),
+  updateProduct
+);
+
+/*
+============================================================
+DELETE
+============================================================
+*/
+
+router.delete(
+  "/:id",
+  protect,
+  authorize("ADMIN"),
+  deleteProduct
+);
 
 module.exports = router;

@@ -4,61 +4,58 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-const normalizeProductWithAI = async (
-  externalProduct,
-  barcode
-) => {
+/*
+============================================================
+NORMALIZE PRODUCT FROM OCR
+============================================================
+*/
+
+const normalizeProductFromOCR = async ({
+  barcode = "",
+  ocrText = "",
+}) => {
   try {
     if (!process.env.GROQ_API_KEY) {
-      console.warn(
-        "GROQ_API_KEY is missing. Skipping AI normalization."
+      console.error(
+        "GROQ_API_KEY is missing in .env"
       );
 
       return null;
     }
 
-    // ==========================================
-    // RAW PRODUCT DATA
-    // ==========================================
+    if (!ocrText || !ocrText.trim()) {
+      console.log(
+        "OCR text is empty. Skipping Groq."
+      );
 
-    const productInformation = {
-      barcode,
+      return null;
+    }
 
-      title:
-        externalProduct?.title || "",
+    console.log(
+      "========================================"
+    );
 
-      brand:
-        externalProduct?.brand || "",
+    console.log(
+      "Sending OCR data to Groq..."
+    );
 
-      model:
-        externalProduct?.model || "",
+    console.log(
+      "OCR Text:",
+      ocrText
+    );
 
-      category:
-        externalProduct?.category || "",
+    console.log(
+      "Barcode:",
+      barcode || "Not detected"
+    );
 
-      description:
-        externalProduct?.description || "",
-
-      color:
-        externalProduct?.color || "",
-
-      size:
-        externalProduct?.size || "",
-
-      images:
-        externalProduct?.images || [],
-
-      offers:
-        externalProduct?.offers || [],
-    };
-
-    // ==========================================
-    // GROQ
-    // ==========================================
+    console.log(
+      "========================================"
+    );
 
     const completion =
       await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-120b",
 
         temperature: 0,
 
@@ -68,17 +65,16 @@ const normalizeProductWithAI = async (
 
             content: `
 You are a product information extraction system
-for a mobile shop management application.
+for a mobile phone shop management application.
 
-You receive raw product information from a barcode
-product database.
+The user provides OCR text captured from a mobile
+phone/product label.
 
-Your job is to extract and normalize the product
-information.
+Your task is to extract the product information.
 
 Return ONLY valid JSON.
 
-The JSON must have exactly these fields:
+The JSON MUST contain exactly these fields:
 
 {
   "brand": "",
@@ -92,56 +88,73 @@ The JSON must have exactly these fields:
 
 IMPORTANT RULES:
 
-1. category must be either:
+1. category must be exactly:
    "MOBILE"
    or
    "ACCESSORY"
 
-2. Smartphone, mobile phone, iPhone,
-   Android phone, feature phone:
-   category = "MOBILE"
+2. If the product is a smartphone/mobile phone,
+   category must be "MOBILE".
 
-3. Charger, cable, earphone, headphone,
-   mobile cover, case, screen protector,
-   power bank, adapter, smartwatch and similar:
-   category = "ACCESSORY"
+3. If the product is a charger, cable, earphone,
+   headphone, mobile cover, case, adapter,
+   power bank, smartwatch, etc.,
+   category must be "ACCESSORY".
 
-4. Extract RAM only if the source data
-   supports it.
+4. Extract the brand if it is present.
 
-5. Extract storage only if the source data
-   supports it.
+5. Extract the exact product model if possible.
 
-6. Extract color only if the source data
-   supports it.
+6. A model number such as:
+   24090RA29I
+   may be a model identifier.
 
-7. Never guess or invent specifications.
+7. Do NOT treat an IMEI number as the model.
 
-8. If information is unavailable,
-   return an empty string.
+8. Extract RAM only if it is supported by the
+   OCR text or clearly identifiable.
 
-9. Do not create purchase price.
+9. Extract storage/ROM only if it is supported
+   by the OCR text or clearly identifiable.
 
-10. Do not create selling price.
+10. Extract color only if available.
 
-11. Keep the description short and useful.
+11. Never invent RAM.
 
-12. Return JSON only.
+12. Never invent storage.
 
-13. Do not use markdown code blocks.
+13. Never invent color.
 
-14. Do not add extra fields.
+14. Never invent price.
+
+15. Never invent purchase price.
+
+16. Never invent selling price.
+
+17. Never invent IMEI.
+
+18. Never invent warranty.
+
+19. If information is unavailable,
+    return an empty string.
+
+20. Keep description short and useful.
+
+21. Return JSON only.
+
+22. Do not return markdown.
+
+23. Do not add extra fields.
 `,
           },
 
           {
             role: "user",
 
-            content: JSON.stringify(
-              productInformation,
-              null,
-              2
-            ),
+            content: JSON.stringify({
+              barcode,
+              ocrText,
+            }),
           },
         ],
 
@@ -150,43 +163,46 @@ IMPORTANT RULES:
         },
       });
 
-    // ==========================================
-    // GET GROQ RESPONSE
-    // ==========================================
-
     const content =
-      completion.choices?.[0]?.message?.content;
+      completion?.choices?.[0]?.message?.content;
 
     if (!content) {
-      console.warn(
-        "Groq returned empty response."
+      console.error(
+        "Groq returned an empty response."
       );
 
       return null;
     }
 
     console.log(
-      "Groq raw response:",
+      "Groq Raw Response:",
       content
     );
 
-    // ==========================================
-    // PARSE JSON
-    // ==========================================
+    let parsedProduct;
 
-    const parsedProduct =
-      JSON.parse(content);
+    try {
+      parsedProduct =
+        JSON.parse(content);
+    } catch (parseError) {
+      console.error(
+        "Groq JSON Parse Error:",
+        parseError.message
+      );
 
-    // ==========================================
-    // RETURN CLEAN DATA
-    // ==========================================
+      return null;
+    }
 
-    return {
+    const normalizedProduct = {
       brand:
-        parsedProduct.brand || "",
+        parsedProduct.brand
+          ?.toString()
+          .trim() || "",
 
       model:
-        parsedProduct.model || "",
+        parsedProduct.model
+          ?.toString()
+          .trim() || "",
 
       category:
         parsedProduct.category ===
@@ -195,27 +211,50 @@ IMPORTANT RULES:
           : "MOBILE",
 
       ram:
-        parsedProduct.ram || "",
+        parsedProduct.ram
+          ?.toString()
+          .trim() || "",
 
       storage:
-        parsedProduct.storage || "",
+        parsedProduct.storage
+          ?.toString()
+          .trim() || "",
 
       color:
-        parsedProduct.color || "",
+        parsedProduct.color
+          ?.toString()
+          .trim() || "",
 
       description:
-        parsedProduct.description || "",
+        parsedProduct.description
+          ?.toString()
+          .trim() || "",
     };
+
+    console.log(
+      "Normalized Product:",
+      normalizedProduct
+    );
+
+    return normalizedProduct;
   } catch (error) {
     console.error(
       "Groq Product Normalization Error:",
-      error?.message || error
+      error?.response?.data ||
+        error?.message ||
+        error
     );
 
     return null;
   }
 };
 
+/*
+============================================================
+EXPORT
+============================================================
+*/
+
 module.exports = {
-  normalizeProductWithAI,
+  normalizeProductFromOCR,
 };

@@ -6,6 +6,25 @@ const inventorySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
       required: true,
+      unique: true,
+    },
+
+    quantity: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: 0,
+    },
+
+    lowStockLimit: {
+      type: Number,
+      default: 5,
+      min: 0,
+    },
+
+    lastStockUpdate: {
+      type: Date,
+      default: Date.now,
     },
 
     imei: {

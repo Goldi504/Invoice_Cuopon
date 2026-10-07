@@ -13,6 +13,7 @@ import Register from "./pages/auth/Register";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Customers from "./pages/customers/Customers";
 import Products from "./pages/products/Products";
+import Inventory from "./pages/inventory/Inventory";
 
 function App() {
   return (
@@ -88,9 +89,15 @@ function App() {
           }
         />
 
+        <Route
+  path="/inventory"
+  element={<Inventory />}
+/>
+
       </Routes>
     </BrowserRouter>
   );
+
 }
 
 export default App;

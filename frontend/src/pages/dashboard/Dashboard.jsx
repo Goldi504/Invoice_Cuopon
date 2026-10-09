@@ -21,7 +21,6 @@ import {
   getMonthlySales,
 } from "../../services/dashboard.api";
 
-
 const monthNames = [
   "Jan",
   "Feb",
@@ -37,16 +36,13 @@ const monthNames = [
   "Dec",
 ];
 
-
 const formatMoney = (value) => {
   return `₹${Number(value || 0).toLocaleString("en-IN")}`;
 };
 
-
 const formatNumber = (value) => {
   return Number(value || 0).toLocaleString("en-IN");
 };
-
 
 function Dashboard() {
   const [summary, setSummary] = useState(null);
@@ -59,7 +55,6 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
-
 
   // =====================================================
   // LOAD DASHBOARD
@@ -91,105 +86,68 @@ function Dashboard() {
         getMonthlySales(),
       ]);
 
-
       // -------------------------------
       // SUMMARY
       // -------------------------------
 
-      setSummary(
-        summaryResponse?.summary || {}
-      );
-
+      setSummary(summaryResponse?.summary || {});
 
       // -------------------------------
       // TODAY SALES
       // -------------------------------
 
-      setTodaySales(
-        todayResponse || {}
-      );
-
+      setTodaySales(todayResponse || {});
 
       // -------------------------------
       // RECENT SALES
       // -------------------------------
 
-      setRecentSales(
-        recentResponse?.sales || []
-      );
-
+      setRecentSales(recentResponse?.sales || []);
 
       // -------------------------------
       // STOCK
       // -------------------------------
 
-      setStockSummary(
-        stockResponse?.stock || []
-      );
-
+      setStockSummary(stockResponse?.stock || []);
 
       // -------------------------------
       // CUSTOMERS
       // -------------------------------
 
-      setCustomerStats(
-        customerResponse?.customers || {}
-      );
-
+      setCustomerStats(customerResponse?.customers || {});
 
       // -------------------------------
       // MONTHLY SALES
       // -------------------------------
 
-      setMonthlySales(
-        monthlyResponse?.monthlySales || []
-      );
-
+      setMonthlySales(monthlyResponse?.monthlySales || []);
     } catch (err) {
+      console.error("Dashboard loading error:", err);
 
-      console.error(
-        "Dashboard loading error:",
-        err
-      );
-
-      setError(
-        err?.response?.data?.message ||
-        "Failed to load dashboard."
-      );
-
+      setError(err?.response?.data?.message || "Failed to load dashboard.");
     } finally {
-
       setLoading(false);
       setRefreshing(false);
-
     }
   };
-
 
   useEffect(() => {
     loadDashboard();
   }, []);
 
-
   // =====================================================
   // REAL BACKEND VALUES
   // =====================================================
 
-  const totalCustomers =
-    summary?.totalCustomers || 0;
+  const totalCustomers = summary?.totalCustomers || 0;
 
-  const availableStock =
-    summary?.availableStock || 0;
+  const availableStock = summary?.availableStock || 0;
 
-  const soldStock =
-    summary?.soldStock || 0;
+  const soldStock = summary?.soldStock || 0;
 
-  const totalSales =
-    summary?.totalSales || 0;
+  const totalSales = summary?.totalSales || 0;
 
-  const totalRevenue =
-    summary?.totalRevenue || 0;
-
+  const totalRevenue = summary?.totalRevenue || 0;
 
   // =====================================================
   // TOTAL INVENTORY
@@ -197,20 +155,14 @@ function Dashboard() {
   // Your backend gives availableStock + soldStock.
   // =====================================================
 
-  const totalProducts =
-    Number(availableStock) +
-    Number(soldStock);
-
+  const totalProducts = Number(availableStock) + Number(soldStock);
 
   // =====================================================
   // STOCK
   // =====================================================
 
-  const lowStockCount = stockSummary.find(
-    (item) =>
-      item._id === "LOW_STOCK"
-  )?.count || 0;
-
+  const lowStockCount =
+    stockSummary.find((item) => item._id === "LOW_STOCK")?.count || 0;
 
   // =====================================================
   // TOP PRODUCTS
@@ -222,107 +174,68 @@ function Dashboard() {
   // =====================================================
 
   const topProducts = useMemo(() => {
-
     const productMap = {};
 
     recentSales.forEach((sale) => {
-
       const product = sale.product;
 
       if (!product) return;
 
-      const productId =
-        product._id || product.id;
+      const productId = product._id || product.id;
 
       if (!productId) return;
 
-      const productName =
-        product.model ||
-        product.name ||
-        "Mobile";
+      const productName = product.model || product.name || "Mobile";
 
       if (!productMap[productId]) {
-
         productMap[productId] = {
           id: productId,
           name: productName,
           sold: 0,
         };
-
       }
 
       productMap[productId].sold += 1;
-
     });
 
-
     return Object.values(productMap)
-      .sort(
-        (a, b) =>
-          b.sold - a.sold
-      )
+      .sort((a, b) => b.sold - a.sold)
       .slice(0, 5);
-
   }, [recentSales]);
-
 
   // =====================================================
   // CHART DATA
   // =====================================================
 
   const chartData = useMemo(() => {
+    const data = Array.from({ length: 12 }, (_, index) => {
+      const found = monthlySales.find((item) => item?._id?.month === index + 1);
 
-    const data = Array.from(
-      { length: 12 },
-      (_, index) => {
-
-        const found =
-          monthlySales.find(
-            (item) =>
-              item?._id?.month ===
-              index + 1
-          );
-
-        return {
-          month: monthNames[index],
-          revenue:
-            found?.revenue || 0,
-        };
-
-      }
-    );
+      return {
+        month: monthNames[index],
+        revenue: found?.revenue || 0,
+      };
+    });
 
     return data;
-
   }, [monthlySales]);
-
 
   // =====================================================
   // MAX CHART VALUE
   // =====================================================
 
-  const maxRevenue =
-    Math.max(
-      ...chartData.map(
-        (item) => item.revenue
-      ),
-      1
-    );
-
+  const maxRevenue = Math.max(...chartData.map((item) => item.revenue), 1);
 
   // =====================================================
   // LOADING
   // =====================================================
 
   if (loading) {
-
     return (
       <div className="space-y-6">
-
         <div className="h-9 w-48 animate-pulse rounded-lg bg-slate-200" />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
           {[1, 2, 3, 4].map((item) => (
             <div
               key={item}
@@ -334,12 +247,9 @@ function Dashboard() {
               "
             />
           ))}
-
         </div>
 
-
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-
           <div
             className="
               h-[420px]
@@ -358,25 +268,19 @@ function Dashboard() {
               bg-white
             "
           />
-
         </div>
-
       </div>
     );
   }
-
 
   // =====================================================
   // ERROR
   // =====================================================
 
   if (error) {
-
     return (
       <div className="flex min-h-[500px] items-center justify-center">
-
         <div className="text-center">
-
           <div
             className="
               mx-auto
@@ -389,12 +293,8 @@ function Dashboard() {
               bg-red-50
             "
           >
-            <AlertCircle
-              size={25}
-              className="text-red-500"
-            />
+            <AlertCircle size={25} className="text-red-500" />
           </div>
-
 
           <h2
             className="
@@ -407,7 +307,6 @@ function Dashboard() {
             Dashboard could not load
           </h2>
 
-
           <p
             className="
               mt-2
@@ -417,7 +316,6 @@ function Dashboard() {
           >
             {error}
           </p>
-
 
           <button
             onClick={() => loadDashboard()}
@@ -441,17 +339,12 @@ function Dashboard() {
             "
           >
             <RefreshCw size={16} />
-
             Try Again
-
           </button>
-
         </div>
-
       </div>
     );
   }
-
 
   // =====================================================
   // MAIN
@@ -459,7 +352,6 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-
       {/* =================================================
           PAGE HEADER
       ================================================= */}
@@ -474,9 +366,7 @@ function Dashboard() {
           sm:justify-between
         "
       >
-
         <div>
-
           <h1
             className="
               text-3xl
@@ -488,7 +378,6 @@ function Dashboard() {
             Dashboard
           </h1>
 
-
           <p
             className="
               mt-1
@@ -498,12 +387,9 @@ function Dashboard() {
           >
             Good morning, Admin! Here's what's happening today.
           </p>
-
         </div>
 
-
         <div className="flex items-center gap-2">
-
           {/* REFRESH */}
 
           <button
@@ -528,18 +414,8 @@ function Dashboard() {
               hover:shadow-md
             "
           >
-
-            <RefreshCw
-              size={17}
-              className={
-                refreshing
-                  ? "animate-spin"
-                  : ""
-              }
-            />
-
+            <RefreshCw size={17} className={refreshing ? "animate-spin" : ""} />
           </button>
-
 
           {/* DATE */}
 
@@ -565,22 +441,12 @@ function Dashboard() {
               hover:shadow-md
             "
           >
-
             <CalendarDays size={17} />
-
             30 Sep 2026
-
-            <ChevronDown
-              size={16}
-              className="text-slate-400"
-            />
-
+            <ChevronDown size={16} className="text-slate-400" />
           </button>
-
         </div>
-
       </div>
-
 
       {/* =================================================
           STAT CARDS
@@ -595,7 +461,6 @@ function Dashboard() {
           xl:grid-cols-4
         "
       >
-
         {/* SALES */}
 
         <StatCard
@@ -606,7 +471,6 @@ function Dashboard() {
           change="+12%"
           changeClass="text-emerald-600"
         />
-
 
         {/* CUSTOMERS */}
 
@@ -624,7 +488,6 @@ function Dashboard() {
           changeText="new today"
         />
 
-
         {/* PRODUCTS */}
 
         <StatCard
@@ -637,7 +500,6 @@ function Dashboard() {
           changeText="available"
         />
 
-
         {/* LOW STOCK */}
 
         <StatCard
@@ -649,9 +511,7 @@ function Dashboard() {
           changeClass="text-red-500"
           changeText="sold stock"
         />
-
       </div>
-
 
       {/* =================================================
           SALES + TOP PRODUCTS
@@ -665,7 +525,6 @@ function Dashboard() {
           xl:grid-cols-3
         "
       >
-
         {/* =================================================
             SALES OVERVIEW
         ================================================= */}
@@ -685,7 +544,6 @@ function Dashboard() {
             xl:col-span-2
           "
         >
-
           <div
             className="
               flex
@@ -693,9 +551,7 @@ function Dashboard() {
               justify-between
             "
           >
-
             <div>
-
               <h2
                 className="
                   text-lg
@@ -706,7 +562,6 @@ function Dashboard() {
                 Sales Overview
               </h2>
 
-
               <p
                 className="
                   mt-1
@@ -716,9 +571,7 @@ function Dashboard() {
               >
                 Monthly sales performance
               </p>
-
             </div>
-
 
             <button
               className="
@@ -742,66 +595,41 @@ function Dashboard() {
               This Year
               <ChevronDown size={14} />
             </button>
-
           </div>
-
 
           {/* CHART */}
 
           <div className="mt-8 h-[300px]">
-
             <svg
               viewBox="0 0 800 300"
               className="h-full w-full"
               preserveAspectRatio="none"
             >
-
               {/* GRID */}
 
-              {[50, 100, 150, 200, 250].map(
-                (y) => (
-
-                  <line
-                    key={y}
-                    x1="45"
-                    y1={y}
-                    x2="775"
-                    y2={y}
-                    stroke="#E2E8F0"
-                    strokeDasharray="5 5"
-                  />
-
-                )
-              )}
-
+              {[50, 100, 150, 200, 250].map((y) => (
+                <line
+                  key={y}
+                  x1="45"
+                  y1={y}
+                  x2="775"
+                  y2={y}
+                  stroke="#E2E8F0"
+                  strokeDasharray="5 5"
+                />
+              ))}
 
               {/* GRAPH */}
 
               {(() => {
+                const points = chartData.map((item, index) => {
+                  const x =
+                    chartData.length === 1 ? 400 : 45 + (index * 730) / 11;
 
-                const points =
-                  chartData.map(
-                    (item, index) => {
+                  const y = 255 - (item.revenue / maxRevenue) * 205;
 
-                      const x =
-                        chartData.length === 1
-                          ? 400
-                          : 45 +
-                            (index *
-                              730) /
-                              11;
-
-                      const y =
-                        255 -
-                        (item.revenue /
-                          maxRevenue) *
-                          205;
-
-                      return `${x},${y}`;
-
-                    }
-                  );
-
+                  return `${x},${y}`;
+                });
 
                 return (
                   <>
@@ -814,49 +642,32 @@ function Dashboard() {
                       strokeLinejoin="round"
                     />
 
+                    {chartData.map((item, index) => {
+                      const x = 45 + (index * 730) / 11;
 
-                    {chartData.map(
-                      (item, index) => {
+                      const y = 255 - (item.revenue / maxRevenue) * 205;
 
-                        const x =
-                          45 +
-                          (index *
-                            730) /
-                            11;
-
-                        const y =
-                          255 -
-                          (item.revenue /
-                            maxRevenue) *
-                            205;
-
-                        return (
-                          <circle
-                            key={index}
-                            cx={x}
-                            cy={y}
-                            r="5"
-                            fill="white"
-                            stroke="#2563EB"
-                            strokeWidth="4"
-                            className="
+                      return (
+                        <circle
+                          key={index}
+                          cx={x}
+                          cy={y}
+                          r="5"
+                          fill="white"
+                          stroke="#2563EB"
+                          strokeWidth="4"
+                          className="
                               transition-all
                               duration-300
                               hover:r-8
                             "
-                          />
-                        );
-
-                      }
-                    )}
-
+                        />
+                      );
+                    })}
                   </>
                 );
-
               })()}
-
             </svg>
-
 
             {/* MONTHS */}
 
@@ -868,29 +679,20 @@ function Dashboard() {
                 px-8
               "
             >
-
-              {chartData.map(
-                (item) => (
-
-                  <span
-                    key={item.month}
-                    className="
+              {chartData.map((item) => (
+                <span
+                  key={item.month}
+                  className="
                       text-[11px]
                       text-slate-400
                     "
-                  >
-                    {item.month}
-                  </span>
-
-                )
-              )}
-
+                >
+                  {item.month}
+                </span>
+              ))}
             </div>
-
           </div>
-
         </div>
-
 
         {/* =================================================
             TOP SELLING PRODUCTS
@@ -910,7 +712,6 @@ function Dashboard() {
             hover:shadow-lg
           "
         >
-
           <div
             className="
               flex
@@ -918,9 +719,7 @@ function Dashboard() {
               justify-between
             "
           >
-
             <div>
-
               <h2
                 className="
                   text-lg
@@ -931,7 +730,6 @@ function Dashboard() {
                 Top Selling Products
               </h2>
 
-
               <p
                 className="
                   mt-1
@@ -941,9 +739,7 @@ function Dashboard() {
               >
                 Based on recent completed sales
               </p>
-
             </div>
-
 
             <button
               className="
@@ -956,14 +752,11 @@ function Dashboard() {
             >
               View All
             </button>
-
+          
           </div>
 
-
           <div className="mt-6 space-y-5">
-
             {topProducts.length === 0 ? (
-
               <div
                 className="
                   py-12
@@ -974,24 +767,19 @@ function Dashboard() {
               >
                 No sales available
               </div>
-
             ) : (
-
-              topProducts.map(
-                (product, index) => (
-
-                  <div
-                    key={product.id}
-                    className="
+              topProducts.map((product, index) => (
+                <div
+                  key={product.id}
+                  className="
                       group
                       flex
                       items-center
                       gap-3
                     "
-                  >
-
-                    <div
-                      className="
+                >
+                  <div
+                    className="
                         flex
                         h-10
                         w-10
@@ -1005,62 +793,52 @@ function Dashboard() {
                         group-hover:scale-110
                         group-hover:bg-blue-50
                       "
-                    >
-                      <Smartphone
-                        size={19}
-                        className="text-blue-600"
-                      />
-                    </div>
+                  >
+                    <Smartphone size={19} className="text-blue-600" />
+                  </div>
 
-
-                    <div className="min-w-0 flex-1">
-
-                      <div
-                        className="
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className="
                           flex
                           items-center
                           justify-between
                           gap-3
                         "
-                      >
-
-                        <p
-                          className="
+                    >
+                      <p
+                        className="
                             truncate
                             text-sm
                             font-semibold
                             text-slate-900
                           "
-                        >
-                          {product.name}
-                        </p>
+                      >
+                        {product.name}
+                      </p>
 
-
-                        <span
-                          className="
+                      <span
+                        className="
                             shrink-0
                             text-xs
                             text-slate-500
                           "
-                        >
-                          {product.sold} sold
-                        </span>
+                      >
+                        {product.sold} sold
+                      </span>
+                    </div>
 
-                      </div>
-
-
-                      <div
-                        className="
+                    <div
+                      className="
                           mt-2
                           h-1.5
                           overflow-hidden
                           rounded-full
                           bg-slate-100
                         "
-                      >
-
-                        <div
-                          className="
+                    >
+                      <div
+                        className="
                             h-full
                             rounded-full
                             bg-[#F4C64E]
@@ -1068,35 +846,21 @@ function Dashboard() {
                             duration-500
                             group-hover:bg-[#E9B52F]
                           "
-                          style={{
-                            width: `${Math.min(
-                              product.sold * 20,
-                              100
-                            )}%`,
-                          }}
-                        />
-
-                      </div>
-
+                        style={{
+                          width: `${Math.min(product.sold * 20, 100)}%`,
+                        }}
+                      />
                     </div>
-
                   </div>
-
-                )
-              )
-
+                </div>
+              ))
             )}
-
           </div>
-
         </div>
-
       </div>
-
     </div>
   );
 }
-
 
 /* =========================================================
    STAT CARD
@@ -1111,7 +875,6 @@ function StatCard({
   changeClass,
   changeText,
 }) {
-
   return (
     <div
       className="
@@ -1128,7 +891,6 @@ function StatCard({
         hover:shadow-lg
       "
     >
-
       <div
         className="
           flex
@@ -1136,9 +898,7 @@ function StatCard({
           justify-between
         "
       >
-
         <div>
-
           <p
             className="
               text-sm
@@ -1147,7 +907,6 @@ function StatCard({
           >
             {title}
           </p>
-
 
           <h2
             className="
@@ -1159,9 +918,7 @@ function StatCard({
           >
             {value}
           </h2>
-
         </div>
-
 
         <div
           className={`
@@ -1178,13 +935,9 @@ function StatCard({
             ${iconClass}
           `}
         >
-
           <Icon size={21} />
-
         </div>
-
       </div>
-
 
       <div
         className="
@@ -1194,7 +947,6 @@ function StatCard({
           gap-2
         "
       >
-
         <span
           className={`
             flex
@@ -1208,9 +960,7 @@ function StatCard({
           <ArrowUpRight size={14} />
 
           {change}
-
         </span>
-
 
         <span
           className="
@@ -1220,12 +970,9 @@ function StatCard({
         >
           {changeText || "from last week"}
         </span>
-
       </div>
-
     </div>
   );
 }
-
 
 export default Dashboard;

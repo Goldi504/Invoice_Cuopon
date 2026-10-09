@@ -12,6 +12,9 @@ const customerRoutes = require("./routes/customer.routes");
 const whatsappRoutes = require("./routes/whatsapp.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 
+const saleRoutes = require("./routes/sale.routes");
+
+
 const path = require("path");
 const app = express();
 
@@ -40,6 +43,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/test", testRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/inventory", inventoryRoutes);
+app.use("/api/sales", saleRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/customers", customerRoutes);

@@ -32,6 +32,7 @@ const menuItems = [
     path: "/products",
     icon: Smartphone,
   },
+
   {
     name: "Inventory",
     path: "/inventory",

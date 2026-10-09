@@ -14,7 +14,9 @@ import Dashboard from "./pages/dashboard/Dashboard";
 import Customers from "./pages/customers/Customers";
 import Products from "./pages/products/Products";
 import Inventory from "./pages/inventory/Inventory";
-
+import Sales from "./pages/sales/Sales";
+import Payments from "./pages/payments/Payments";
+import Invoices from "./pages/invoices/Invoices";
 function App() {
   return (
     <BrowserRouter>
@@ -93,6 +95,9 @@ function App() {
   path="/inventory"
   element={<Inventory />}
 />
+<Route path="/sales" element={<Sales />} />
+<Route path="/payments" element={<Payments />} />
+<Route path="/invoices" element={<Invoices />} />
 
       </Routes>
     </BrowserRouter>

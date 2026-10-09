@@ -83,130 +83,236 @@ const createPayment = async (req, res) => {
 // ==========================================
 // COMPLETE PAYMENT
 // ==========================================
+// const completePayment = async (req, res) => {
+//   const session = await mongoose.startSession();
+
+//   try {
+//     const { paymentId } = req.params;
+
+//     let result;
+
+//     await session.withTransaction(async () => {
+//       const payment = await Payment.findById(
+//         paymentId
+//       ).session(session);
+
+//       if (!payment) {
+//         throw new Error("Payment not found");
+//       }
+
+//       if (payment.status === "PAID") {
+//         throw new Error(
+//           "Payment is already completed"
+//         );
+//       }
+
+//       if (payment.status === "REFUNDED") {
+//         throw new Error(
+//           "Refunded payment cannot be completed"
+//         );
+//       }
+
+//       const sale = await Sale.findById(
+//         payment.sale
+//       ).session(session);
+
+//       if (!sale) {
+//         throw new Error(
+//           "Related sale not found"
+//         );
+//       }
+
+//       const inventory =
+//         await Inventory.findById(
+//           sale.inventory
+//         ).session(session);
+
+//       if (!inventory) {
+//         throw new Error(
+//           "Related inventory item not found"
+//         );
+//       }
+
+//       if (
+//         inventory.status === "SOLD"
+//       ) {
+//         throw new Error(
+//           "This inventory item is already sold"
+//         );
+//       }
+
+//       // ==============================
+//       // PAYMENT
+//       // ==============================
+
+//       payment.status = "PAID";
+//       payment.paidAt = new Date();
+//       payment.receivedBy = req.user._id;
+
+//       await payment.save({
+//         session,
+//       });
+
+//       // ==============================
+//       // SALE
+//       // ==============================
+
+//       sale.paymentStatus = "PAID";
+//       sale.saleStatus = "COMPLETED";
+//       sale.completedAt = new Date();
+
+//       await sale.save({
+//         session,
+//       });
+
+//       // ==============================
+//       // INVENTORY
+//       // ==============================
+
+//       inventory.status = "SOLD";
+//       inventory.soldAt = new Date();
+
+//       await inventory.save({
+//         session,
+//       });
+
+//       result = {
+//         paymentId: payment._id,
+//         saleId: sale._id,
+//         inventoryId: inventory._id,
+//         imei: inventory.imei,
+//       };
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       message:
+//         "Payment completed and sale finalized successfully",
+//       result,
+//     });
+
+//   } catch (error) {
+
+//     console.error(
+//       "Complete Payment Error:",
+//       error
+//     );
+
+//     return res.status(400).json({
+//       success: false,
+//       message: error.message,
+//     });
+
+//   } finally {
+//     await session.endSession();
+//   }
+// };;
+
 const completePayment = async (req, res) => {
   const session = await mongoose.startSession();
 
   try {
     const { paymentId } = req.params;
-
     let result;
 
     await session.withTransaction(async () => {
-      const payment = await Payment.findById(
-        paymentId
-      ).session(session);
+      const payment = await Payment.findById(paymentId).session(session);
 
-      if (!payment) {
-        throw new Error("Payment not found");
-      }
-
+      if (!payment) throw new Error("Payment not found");
       if (payment.status === "PAID") {
-        throw new Error(
-          "Payment is already completed"
-        );
+        throw new Error("Payment is already completed");
+      }
+      if (payment.status !== "PENDING") {
+        throw new Error("Only pending payments can be completed");
       }
 
-      if (payment.status === "REFUNDED") {
-        throw new Error(
-          "Refunded payment cannot be completed"
-        );
+      const sale = await Sale.findById(payment.sale).session(session);
+
+      if (!sale) throw new Error("Related sale not found");
+
+      if (sale.saleStatus !== "PENDING_PAYMENT") {
+        throw new Error("Sale is not awaiting payment");
       }
 
-      const sale = await Sale.findById(
-        payment.sale
-      ).session(session);
-
-      if (!sale) {
-        throw new Error(
-          "Related sale not found"
-        );
+      if (Number(payment.amount) !== Number(sale.finalAmount)) {
+        throw new Error("Payment amount does not match the sale total");
       }
 
-      const inventory =
-        await Inventory.findById(
-          sale.inventory
-        ).session(session);
+      // Support new multi-item sales and older single-item sales.
+      const inventoryIds =
+        sale.items?.length > 0
+          ? sale.items.map((item) => item.inventory)
+          : sale.inventory
+            ? [sale.inventory]
+            : [];
 
-      if (!inventory) {
-        throw new Error(
-          "Related inventory item not found"
-        );
+      if (inventoryIds.length === 0) {
+        throw new Error("No inventory items are linked to this sale");
       }
 
-      if (
-        inventory.status === "SOLD"
-      ) {
-        throw new Error(
-          "This inventory item is already sold"
-        );
+      // Verify every phone is reserved before completing anything.
+      for (const inventoryId of inventoryIds) {
+        const inventory = await Inventory.findOne({
+          _id: inventoryId,
+          status: "RESERVED",
+        }).session(session);
+
+        if (!inventory) {
+          throw new Error(
+            "A phone is no longer reserved for this sale"
+          );
+        }
       }
 
-      // ==============================
-      // PAYMENT
-      // ==============================
+      await Inventory.updateMany(
+        {
+          _id: { $in: inventoryIds },
+          status: "RESERVED",
+        },
+        {
+          $set: {
+            status: "SOLD",
+            soldAt: new Date(),
+          },
+        },
+        { session }
+      );
 
       payment.status = "PAID";
       payment.paidAt = new Date();
       payment.receivedBy = req.user._id;
-
-      await payment.save({
-        session,
-      });
-
-      // ==============================
-      // SALE
-      // ==============================
+      await payment.save({ session });
 
       sale.paymentStatus = "PAID";
       sale.saleStatus = "COMPLETED";
       sale.completedAt = new Date();
-
-      await sale.save({
-        session,
-      });
-
-      // ==============================
-      // INVENTORY
-      // ==============================
-
-      inventory.status = "SOLD";
-      inventory.soldAt = new Date();
-
-      await inventory.save({
-        session,
-      });
+      await sale.save({ session });
 
       result = {
         paymentId: payment._id,
         saleId: sale._id,
-        inventoryId: inventory._id,
-        imei: inventory.imei,
+        inventoryIds,
+        invoiceNumber: sale.invoiceNumber,
       };
     });
 
     return res.status(200).json({
       success: true,
-      message:
-        "Payment completed and sale finalized successfully",
+      message: "Payment completed and sale finalized successfully",
       result,
     });
-
   } catch (error) {
-
-    console.error(
-      "Complete Payment Error:",
-      error
-    );
+    console.error("Complete Payment Error:", error);
 
     return res.status(400).json({
       success: false,
-      message: error.message,
+      message: error.message || "Failed to complete payment",
     });
-
   } finally {
     await session.endSession();
   }
-};;
+};
+
 
 // ==========================================
 // GET PAYMENT BY ID

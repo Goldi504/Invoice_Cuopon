@@ -1,5 +1,10 @@
-
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Search,
   RefreshCw,
@@ -10,13 +15,16 @@ import {
   XCircle,
   AlertCircle,
   X,
-  CalendarDays,
   IndianRupee,
+  ArrowUpRight,
 } from "lucide-react";
 
 import Sidebar from "../../components/layout/Sidebar";
-
 import api from "../../services/api";
+
+// ==================================================
+// HELPERS
+// ==================================================
 
 const formatMoney = (amount) =>
   new Intl.NumberFormat("en-IN", {
@@ -58,15 +66,239 @@ const methodLabel = (method) => {
   return labels[method] || method || "—";
 };
 
+const spring = {
+  type: "spring",
+  stiffness: 350,
+  damping: 25,
+};
+
+const pageVariants = {
+  hidden: { opacity: 0, y: 18 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      staggerChildren: 0.07,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35 },
+  },
+};
+
+// ==================================================
+// ANIMATED BUTTON
+// ==================================================
+
+function AnimatedButton({
+  children,
+  onClick,
+  disabled = false,
+  variant = "gold",
+  className = "",
+  type = "button",
+}) {
+  const styles = {
+    gold: "bg-[#F4C64E] text-black hover:bg-[#E7B83B]",
+    dark: "bg-[#191919] text-white hover:bg-[#303030]",
+    outline:
+      "border border-gray-200 bg-white text-gray-700 hover:border-[#D4AF37] hover:bg-amber-50",
+  };
+
+  return (
+    <motion.button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      whileHover={
+        disabled
+          ? undefined
+          : {
+              y: -2,
+              scale: 1.02,
+              boxShadow: "0 8px 20px rgba(212,175,55,0.18)",
+            }
+      }
+      whileTap={disabled ? undefined : { scale: 0.96 }}
+      transition={spring}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${styles[variant]} ${className}`}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+// ==================================================
+// ANIMATED STAT CARD
+// ==================================================
+
+function StatCard({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  iconClass,
+  compact = false,
+}) {
+  return (
+    <motion.div
+      variants={itemVariants}
+      whileHover={{
+        y: -5,
+        rotateX: 2,
+        rotateY: -2,
+        boxShadow: "0 16px 32px rgba(15,23,42,0.08)",
+      }}
+      transition={spring}
+      style={{ transformStyle: "preserve-3d" }}
+      className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-gray-500">
+            {title}
+          </p>
+
+          <motion.p
+            key={String(value)}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`mt-3 break-words font-extrabold tracking-tight ${
+              compact ? "text-xl sm:text-2xl" : "text-3xl"
+            }`}
+          >
+            {value}
+          </motion.p>
+
+          <p className="mt-2 text-xs text-gray-500">
+            {subtitle}
+          </p>
+        </div>
+
+        <motion.div
+          whileHover={{ rotate: 12, scale: 1.12 }}
+          transition={spring}
+          className={`rounded-xl p-3 ${iconClass}`}
+        >
+          <Icon size={22} />
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ==================================================
+// STATUS BADGE
+// ==================================================
+
+function StatusBadge({ status }) {
+  const styles =
+    statusStyles[status] || "bg-gray-100 text-gray-600";
+
+  const Icon =
+    status === "PAID"
+      ? CheckCircle2
+      : status === "PENDING"
+        ? Clock3
+        : status === "FAILED"
+          ? XCircle
+          : AlertCircle;
+
+  const label =
+    status === "PAID" ? "Completed" : status || "Unknown";
+
+  return (
+    <motion.span
+      layout
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={spring}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${styles}`}
+    >
+      <Icon size={13} />
+      {label}
+    </motion.span>
+  );
+}
+
+// ==================================================
+// DETAIL ROW
+// ==================================================
+
+function DetailRow({ label, value }) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-gray-100 pb-3 text-sm last:border-0">
+      <span className="text-gray-500">{label}</span>
+
+      <span className="max-w-[65%] break-words text-right font-medium text-gray-800">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+// ==================================================
+// ALERT MESSAGE
+// ==================================================
+
+function AlertMessage({ type = "error", message, onClose }) {
+  const isError = type === "error";
+  const Icon = isError ? AlertCircle : CheckCircle2;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+      className={`mb-5 flex items-start gap-3 rounded-xl border p-4 text-sm ${
+        isError
+          ? "border-red-200 bg-red-50 text-red-700"
+          : "border-green-200 bg-green-50 text-green-800"
+      }`}
+    >
+      <Icon size={18} className="mt-0.5 shrink-0" />
+
+      <span className="flex-1">{message}</span>
+
+      <motion.button
+        type="button"
+        whileHover={{ rotate: 90 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={onClose}
+        aria-label="Dismiss message"
+      >
+        <X size={17} />
+      </motion.button>
+    </motion.div>
+  );
+}
+
+// ==================================================
+// PAYMENTS PAGE
+// ==================================================
+
 function Payments() {
   const [payments, setPayments] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [processingId, setProcessingId] = useState("");
-  const [notice, setNotice] = useState("");
+
+  // ------------------------------------------------
+  // Load payments
+  // ------------------------------------------------
 
   const loadPayments = useCallback(async () => {
     setLoading(true);
@@ -74,6 +306,7 @@ function Payments() {
 
     try {
       const response = await api.get("/payments");
+
       setPayments(response.data.payments || []);
     } catch (err) {
       setError(
@@ -89,19 +322,17 @@ function Payments() {
     loadPayments();
   }, [loadPayments]);
 
+  // ------------------------------------------------
+  // Search and status filter
+  // ------------------------------------------------
+
   const filteredPayments = useMemo(() => {
     const query = search.trim().toLowerCase();
 
     return payments.filter((payment) => {
-      const customerName =
-        payment.customer?.name || "Unknown customer";
-
-      const invoiceNumber =
-        payment.sale?.invoiceNumber || "";
-
       const searchable = [
-        invoiceNumber,
-        customerName,
+        payment.sale?.invoiceNumber || "",
+        payment.customer?.name || "Unknown customer",
         payment.customer?.mobileNumber || "",
         payment.paymentMethod || "",
         payment.status || "",
@@ -110,29 +341,81 @@ function Payments() {
         .join(" ")
         .toLowerCase();
 
-      const matchesSearch = !query || searchable.includes(query);
+      const matchesSearch =
+        !query || searchable.includes(query);
 
       const matchesStatus =
-        statusFilter === "ALL" || payment.status === statusFilter;
+        statusFilter === "ALL" ||
+        payment.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
   }, [payments, search, statusFilter]);
 
-  const stats = useMemo(() => {
-    return {
+  // ------------------------------------------------
+  // Dashboard statistics
+  // ------------------------------------------------
+
+  const stats = useMemo(
+    () => ({
       total: payments.length,
-      paid: payments.filter((p) => p.status === "PAID").length,
-      pending: payments.filter((p) => p.status === "PENDING").length,
-      failed: payments.filter((p) => p.status === "FAILED").length,
+
+      paid: payments.filter(
+        (payment) => payment.status === "PAID"
+      ).length,
+
+      pending: payments.filter(
+        (payment) => payment.status === "PENDING"
+      ).length,
+
+      failed: payments.filter(
+        (payment) => payment.status === "FAILED"
+      ).length,
+
       totalCollected: payments
-        .filter((p) => p.status === "PAID")
-        .reduce((sum, p) => sum + Number(p.amount || 0), 0),
-    };
-  }, [payments]);
+        .filter((payment) => payment.status === "PAID")
+        .reduce(
+          (sum, payment) =>
+            sum + Number(payment.amount || 0),
+          0
+        ),
+    }),
+    [payments]
+  );
+
+  // ------------------------------------------------
+  // View payment details
+  // ------------------------------------------------
+
+  const handleViewPayment = async (payment) => {
+    setError("");
+
+    try {
+      const response = await api.get(
+        `/payments/${payment._id}`
+      );
+
+      setSelectedPayment(response.data.payment);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Unable to load payment details."
+      );
+    }
+  };
+
+  // ------------------------------------------------
+  // Complete payment
+  // ------------------------------------------------
 
   const handleCompletePayment = async (payment) => {
-    if (payment.status !== "PENDING") return;
+    if (
+      !payment?._id ||
+      payment.status !== "PENDING" ||
+      processingId
+    ) {
+      return;
+    }
 
     const confirmed = window.confirm(
       `Confirm that payment for invoice ${
@@ -147,9 +430,12 @@ function Payments() {
     setNotice("");
 
     try {
-      await api.patch(`/payments/${payment._id}/complete`);
+      await api.patch(
+        `/payments/${payment._id}/complete`
+      );
 
       setNotice("Payment completed successfully.");
+
       await loadPayments();
 
       if (selectedPayment?._id === payment._id) {
@@ -157,7 +443,9 @@ function Payments() {
           `/payments/${payment._id}`
         );
 
-        setSelectedPayment(detailResponse.data.payment);
+        setSelectedPayment(
+          detailResponse.data.payment
+        );
       }
     } catch (err) {
       setError(
@@ -169,69 +457,103 @@ function Payments() {
     }
   };
 
+  // ------------------------------------------------
+  // Page UI
+  // ------------------------------------------------
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#191919]">
       <Sidebar />
 
       <main className="min-h-screen p-4 sm:p-6 lg:ml-[250px] lg:p-8">
-        <div className="mx-auto max-w-[1600px]">
-          {/* Header */}
-          <header className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+        <motion.div
+          variants={pageVariants}
+          initial="hidden"
+          animate="visible"
+          className="mx-auto max-w-[1600px]"
+        >
+          {/* HEADER */}
+
+          <motion.header
+            variants={itemVariants}
+            className="relative mb-7 flex flex-col justify-between gap-4 overflow-hidden rounded-2xl border border-amber-100 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:p-7"
+          >
+            <motion.div
+              aria-hidden="true"
+              animate={{
+                x: [0, 15, 0],
+                y: [0, -8, 0],
+              }}
+              transition={{
+                duration: 7,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full bg-amber-100/70 blur-3xl"
+            />
+
+            <div className="relative">
+              
+
+              <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
                 Payments
+                
               </h1>
+
               <p className="mt-1 text-sm text-gray-500">
-                Manage payment transactions
+                Manage payment transactions and verify received payments.
               </p>
             </div>
 
-            <button
-              type="button"
+            <AnimatedButton
               onClick={loadPayments}
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F4C64E] px-5 py-3 text-sm font-semibold text-black transition hover:bg-[#e7b83b] disabled:opacity-60"
+              className="relative shrink-0"
             >
               <RefreshCw
                 size={17}
                 className={loading ? "animate-spin" : ""}
               />
               Refresh
-            </button>
-          </header>
+            </AnimatedButton>
+          </motion.header>
 
-          {/* Messages */}
-          {error && (
-            <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-              <AlertCircle size={19} className="mt-0.5 shrink-0" />
-              <span className="flex-1">{error}</span>
-              <button
-                type="button"
-                onClick={() => setError("")}
-                aria-label="Dismiss error"
-              >
-                <X size={17} />
-              </button>
-            </div>
-          )}
+          {/* ALERTS */}
 
-          {notice && (
-            <div className="mb-5 flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-              <CheckCircle2 size={18} />
-              {notice}
-              <button
-                type="button"
-                onClick={() => setNotice("")}
-                className="ml-auto"
-                aria-label="Dismiss notification"
-              >
-                <X size={17} />
-              </button>
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {error && (
+              <AlertMessage
+                key="error"
+                type="error"
+                message={error}
+                onClose={() => setError("")}
+              />
+            )}
 
-          {/* Summary cards */}
-          <div className="mb-7 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {!error && notice && (
+              <AlertMessage
+                key="notice"
+                type="success"
+                message={notice}
+                onClose={() => setNotice("")}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* STATISTICS */}
+
+          <motion.div
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.08 },
+              },
+            }}
+            initial="hidden"
+            animate="visible"
+            className="mb-7 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+          >
             <StatCard
               title="Total Payments"
               value={stats.total}
@@ -264,17 +586,29 @@ function Payments() {
               iconClass="bg-[#FFF6D9] text-[#9B7613]"
               compact
             />
-          </div>
+          </motion.div>
 
-          {/* Payments table */}
-          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          {/* PAYMENTS TABLE */}
+
+          <motion.section
+            variants={itemVariants}
+            whileHover={{
+              boxShadow:
+                "0 18px 42px rgba(15,23,42,0.06)",
+            }}
+            transition={{ duration: 0.35 }}
+            className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+          >
+            {/* Table header and filters */}
+
             <div className="flex flex-col gap-4 border-b border-gray-100 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-lg font-bold">
                   Payment Transactions
                 </h2>
+
                 <p className="mt-1 text-sm text-gray-500">
-                  View and manage recorded payments
+                  View and manage recorded payments.
                 </p>
               </div>
 
@@ -284,12 +618,15 @@ function Payments() {
                     size={18}
                     className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
                   />
+
                   <input
                     type="text"
                     value={search}
-                    onChange={(event) => setSearch(event.target.value)}
+                    onChange={(event) =>
+                      setSearch(event.target.value)
+                    }
                     placeholder="Search payments..."
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-[#D4AF37] focus:bg-white"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-[#D4AF37] focus:bg-white focus:ring-4 focus:ring-amber-100"
                   />
                 </div>
 
@@ -298,7 +635,7 @@ function Payments() {
                   onChange={(event) =>
                     setStatusFilter(event.target.value)
                   }
-                  className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#D4AF37]"
+                  className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-[#D4AF37] focus:ring-4 focus:ring-amber-100"
                 >
                   <option value="ALL">All Status</option>
                   <option value="PAID">Completed</option>
@@ -309,22 +646,45 @@ function Payments() {
               </div>
             </div>
 
+            {/* Table content */}
+
             {loading ? (
               <div className="flex min-h-64 items-center justify-center gap-3 text-sm text-gray-500">
-                <RefreshCw size={20} className="animate-spin" />
+                <RefreshCw
+                  size={20}
+                  className="animate-spin"
+                />
                 Loading payments...
               </div>
             ) : filteredPayments.length === 0 ? (
-              <div className="flex min-h-64 flex-col items-center justify-center px-5 text-center">
-                <div className="mb-3 rounded-2xl bg-gray-100 p-4">
-                  <CreditCard size={30} className="text-gray-400" />
-                </div>
-                <h3 className="font-semibold">No payments found</h3>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex min-h-64 flex-col items-center justify-center px-5 text-center"
+              >
+                <motion.div
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                  }}
+                  className="mb-3 rounded-2xl bg-gray-100 p-4"
+                >
+                  <CreditCard
+                    size={30}
+                    className="text-gray-400"
+                  />
+                </motion.div>
+
+                <h3 className="font-semibold">
+                  No payments found
+                </h3>
+
                 <p className="mt-1 max-w-sm text-sm text-gray-500">
                   Payments will appear here when sales create payment
                   records. Try changing your search or status filter.
                 </p>
-              </div>
+              </motion.div>
             ) : (
               <>
                 <div className="overflow-x-auto">
@@ -357,250 +717,275 @@ function Payments() {
                     </thead>
 
                     <tbody className="divide-y divide-gray-100">
-                      {filteredPayments.map((payment, index) => (
-                        <tr
-                          key={payment._id}
-                          className="transition hover:bg-[#FFFCF2]"
-                        >
-                          <td className="px-5 py-4 text-gray-500">
-                            {index + 1}
-                          </td>
+                      <AnimatePresence mode="popLayout">
+                        {filteredPayments.map((payment, index) => (
+                          <motion.tr
+                            layout
+                            key={payment._id}
+                            initial={{
+                              opacity: 0,
+                              x: 12,
+                            }}
+                            animate={{
+                              opacity: 1,
+                              x: 0,
+                            }}
+                            exit={{
+                              opacity: 0,
+                              x: -12,
+                            }}
+                            transition={spring}
+                            whileHover={{
+                              backgroundColor: "#FFFCF2",
+                            }}
+                          >
+                            <td className="px-5 py-4 text-gray-500">
+                              {index + 1}
+                            </td>
 
-                          <td className="px-5 py-4">
-                            <span className="font-semibold text-gray-900">
-                              {payment.sale?.invoiceNumber || "—"}
-                            </span>
-                          </td>
+                            <td className="px-5 py-4">
+                              <span className="font-semibold text-gray-900">
+                                {payment.sale?.invoiceNumber || "—"}
+                              </span>
+                            </td>
 
-                          <td className="px-5 py-4">
-                            <p className="font-medium text-gray-800">
-                              {payment.customer?.name || "Unknown customer"}
-                            </p>
-                            <p className="mt-1 text-xs text-gray-500">
-                              {payment.customer?.mobileNumber || "—"}
-                            </p>
-                          </td>
+                            <td className="px-5 py-4">
+                              <p className="font-medium text-gray-800">
+                                {payment.customer?.name ||
+                                  "Unknown customer"}
+                              </p>
 
-                          <td className="px-5 py-4 font-semibold">
-                            {formatMoney(payment.amount)}
-                          </td>
+                              <p className="mt-1 text-xs text-gray-500">
+                                {payment.customer?.mobileNumber || "—"}
+                              </p>
+                            </td>
 
-                          <td className="px-5 py-4 text-gray-600">
-                            {methodLabel(payment.paymentMethod)}
-                          </td>
+                            <td className="px-5 py-4 font-semibold">
+                              {formatMoney(payment.amount)}
+                            </td>
 
-                          <td className="px-5 py-4">
-                            <StatusBadge status={payment.status} />
-                          </td>
+                            <td className="px-5 py-4 text-gray-600">
+                              {methodLabel(payment.paymentMethod)}
+                            </td>
 
-                          <td className="px-5 py-4 whitespace-nowrap text-gray-600">
-                            {formatDate(payment.createdAt)}
-                          </td>
+                            <td className="px-5 py-4">
+                              <StatusBadge status={payment.status} />
+                            </td>
 
-                          <td className="px-5 py-4">
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  setError("");
-                                  try {
-                                    const response = await api.get(
-                                      `/payments/${payment._id}`
-                                    );
-                                    setSelectedPayment(response.data.payment);
-                                  } catch (err) {
-                                    setError(
-                                      err.response?.data?.message ||
-                                        "Unable to load payment details."
-                                    );
-                                  }
-                                }}
-                                title="View payment"
-                                aria-label="View payment"
-                                className="rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-[#D4AF37] hover:bg-[#FFF8E1] hover:text-black"
-                              >
-                                <Eye size={16} />
-                              </button>
+                            <td className="whitespace-nowrap px-5 py-4 text-gray-600">
+                              {formatDate(payment.createdAt)}
+                            </td>
 
-                              {payment.status === "PENDING" && (
-                                <button
+                            <td className="px-5 py-4">
+                              <div className="flex items-center justify-end gap-2">
+                                <motion.button
                                   type="button"
+                                  whileHover={{
+                                    scale: 1.08,
+                                    y: -1,
+                                  }}
+                                  whileTap={{ scale: 0.92 }}
                                   onClick={() =>
-                                    handleCompletePayment(payment)
+                                    handleViewPayment(payment)
                                   }
-                                  disabled={processingId === payment._id}
-                                  title="Complete payment"
-                                  aria-label="Complete payment"
-                                  className="rounded-lg bg-[#F4C64E] p-2 text-black transition hover:bg-[#e7b83b] disabled:opacity-50"
+                                  title="View payment"
+                                  aria-label="View payment"
+                                  className="rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-[#D4AF37] hover:bg-[#FFF8E1] hover:text-black"
                                 >
-                                  {processingId === payment._id ? (
-                                    <RefreshCw
-                                      size={16}
-                                      className="animate-spin"
-                                    />
-                                  ) : (
-                                    <CheckCircle2 size={16} />
-                                  )}
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                                  <Eye size={16} />
+                                </motion.button>
+
+                                {payment.status === "PENDING" && (
+                                  <motion.button
+                                    type="button"
+                                    whileHover={{
+                                      scale: 1.08,
+                                      y: -1,
+                                    }}
+                                    whileTap={{ scale: 0.92 }}
+                                    onClick={() =>
+                                      handleCompletePayment(payment)
+                                    }
+                                    disabled={Boolean(processingId)}
+                                    title="Complete payment"
+                                    aria-label="Complete payment"
+                                    className="rounded-lg bg-[#F4C64E] p-2 text-black transition hover:bg-[#E7B83B] disabled:opacity-50"
+                                  >
+                                    {processingId === payment._id ? (
+                                      <RefreshCw
+                                        size={16}
+                                        className="animate-spin"
+                                      />
+                                    ) : (
+                                      <CheckCircle2 size={16} />
+                                    )}
+                                  </motion.button>
+                                )}
+                              </div>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
                     </tbody>
                   </table>
                 </div>
 
                 <div className="flex flex-col gap-2 border-t border-gray-100 px-5 py-4 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
                   <span>
-                    Showing {filteredPayments.length} of {payments.length}{" "}
-                    payments
+                    Showing {filteredPayments.length} of{" "}
+                    {payments.length} payments
                   </span>
-                  <span>All amounts in Indian Rupees (₹)</span>
+
+                  <span>
+                    All amounts in Indian Rupees (₹)
+                  </span>
                 </div>
               </>
             )}
-          </section>
-        </div>
+          </motion.section>
+        </motion.div>
       </main>
 
-      {/* Payment details modal */}
-      {selectedPayment && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) {
-              setSelectedPayment(null);
-            }
-          }}
-        >
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-gray-100 p-5">
-              <div>
-                <h2 className="text-lg font-bold">Payment Details</h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  {selectedPayment.sale?.invoiceNumber || "Invoice unavailable"}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedPayment(null)}
-                className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
-                aria-label="Close details"
-              >
-                <X size={20} />
-              </button>
-            </div>
+      {/* PAYMENT DETAILS MODAL */}
 
-            <div className="space-y-4 p-5">
-              <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4">
+      <AnimatePresence>
+        {selectedPayment && (
+          <motion.div
+            key="payment-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={(event) => {
+              if (event.target === event.currentTarget) {
+                setSelectedPayment(null);
+              }
+            }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 24,
+                scale: 0.96,
+                rotateX: -3,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                rotateX: 0,
+              }}
+              exit={{
+                opacity: 0,
+                y: 12,
+                scale: 0.97,
+              }}
+              transition={spring}
+              className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 p-5">
                 <div>
-                  <p className="text-sm text-gray-500">Payment amount</p>
-                  <p className="mt-1 text-2xl font-extrabold">
-                    {formatMoney(selectedPayment.amount)}
+                  <h2 className="text-lg font-bold">
+                    Payment Details
+                  </h2>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    {selectedPayment.sale?.invoiceNumber ||
+                      "Invoice unavailable"}
                   </p>
                 </div>
-                <StatusBadge status={selectedPayment.status} />
+
+                <motion.button
+                  type="button"
+                  whileHover={{ rotate: 90, scale: 1.05 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setSelectedPayment(null)}
+                  className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+                  aria-label="Close details"
+                >
+                  <X size={20} />
+                </motion.button>
               </div>
 
-              <DetailRow
-                label="Customer"
-                value={selectedPayment.customer?.name || "—"}
-              />
-              <DetailRow
-                label="Mobile number"
-                value={selectedPayment.customer?.mobileNumber || "—"}
-              />
-              <DetailRow
-                label="Payment method"
-                value={methodLabel(selectedPayment.paymentMethod)}
-              />
-              <DetailRow
-                label="Transaction ID"
-                value={selectedPayment.transactionId || "Not provided"}
-              />
-              <DetailRow
-                label="Created date"
-                value={formatDate(selectedPayment.createdAt)}
-              />
-              <DetailRow
-                label="Paid date"
-                value={formatDate(selectedPayment.paidAt)}
-              />
-
-              {selectedPayment.status === "PENDING" && (
-                <button
-                  type="button"
-                  disabled={processingId === selectedPayment._id}
-                  onClick={() => handleCompletePayment(selectedPayment)}
-                  className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#F4C64E] px-4 py-3 font-bold text-black transition hover:bg-[#e7b83b] disabled:opacity-50"
+              <div className="space-y-4 p-5">
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 p-4"
                 >
-                  <CheckCircle2 size={18} />
-                  Mark Payment Completed
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Payment amount
+                    </p>
 
-function StatCard({ title, value, subtitle, icon: Icon, iconClass, compact }) {
-  return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p
-            className={`mt-3 break-words font-extrabold tracking-tight ${
-              compact ? "text-xl sm:text-2xl" : "text-3xl"
-            }`}
-          >
-            {value}
-          </p>
-          <p className="mt-2 text-xs text-gray-500">{subtitle}</p>
-        </div>
-        <div className={`rounded-xl p-3 ${iconClass}`}>
-          <Icon size={22} />
-        </div>
-      </div>
-    </div>
-  );
-}
+                    <p className="mt-1 text-2xl font-extrabold">
+                      {formatMoney(selectedPayment.amount)}
+                    </p>
+                  </div>
 
-function StatusBadge({ status }) {
-  const styles = statusStyles[status] || "bg-gray-100 text-gray-600";
+                  <StatusBadge status={selectedPayment.status} />
+                </motion.div>
 
-  const Icon =
-    status === "PAID"
-      ? CheckCircle2
-      : status === "PENDING"
-        ? Clock3
-        : status === "FAILED"
-          ? XCircle
-          : AlertCircle;
+                <DetailRow
+                  label="Customer"
+                  value={selectedPayment.customer?.name || "—"}
+                />
 
-  const label = status === "PAID" ? "Completed" : status || "Unknown";
+                <DetailRow
+                  label="Mobile number"
+                  value={
+                    selectedPayment.customer?.mobileNumber || "—"
+                  }
+                />
 
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${styles}`}
-    >
-      <Icon size={13} />
-      {label}
-    </span>
-  );
-}
+                <DetailRow
+                  label="Payment method"
+                  value={methodLabel(selectedPayment.paymentMethod)}
+                />
 
-function DetailRow({ label, value }) {
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-gray-100 pb-3 text-sm last:border-0">
-      <span className="text-gray-500">{label}</span>
-      <span className="max-w-[65%] break-words text-right font-medium text-gray-800">
-        {value}
-      </span>
+                <DetailRow
+                  label="Transaction ID"
+                  value={
+                    selectedPayment.transactionId || "Not provided"
+                  }
+                />
+
+                <DetailRow
+                  label="Created date"
+                  value={formatDate(selectedPayment.createdAt)}
+                />
+
+                <DetailRow
+                  label="Paid date"
+                  value={formatDate(selectedPayment.paidAt)}
+                />
+
+                {selectedPayment.status === "PENDING" && (
+                  <AnimatedButton
+                    className="mt-2 w-full py-3"
+                    disabled={Boolean(processingId)}
+                    onClick={() =>
+                      handleCompletePayment(selectedPayment)
+                    }
+                  >
+                    {processingId === selectedPayment._id ? (
+                      <RefreshCw
+                        size={18}
+                        className="animate-spin"
+                      />
+                    ) : (
+                      <CheckCircle2 size={18} />
+                    )}
+
+                    Mark Payment Completed
+                    <ArrowUpRight size={16} />
+                  </AnimatedButton>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

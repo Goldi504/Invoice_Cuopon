@@ -700,7 +700,7 @@ function Products() {
         <div>
           <div className="flex items-center gap-3">
 
-            <div
+            {/* <div
               className="
                 flex
                 h-12
@@ -712,9 +712,9 @@ function Products() {
                 text-shop-gold
                 shadow-lg
               "
-            >
-              <Package size={24} />
-            </div>
+            > */}
+              {/* <Package size={24} /> */}
+            {/* </div> */}
 
             <div>
               <h1 className="text-3xl font-bold text-shop-text">

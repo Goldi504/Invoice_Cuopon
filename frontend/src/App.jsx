@@ -17,6 +17,7 @@ import Inventory from "./pages/inventory/Inventory";
 import Sales from "./pages/sales/Sales";
 import Payments from "./pages/payments/Payments";
 import Invoices from "./pages/invoices/Invoices";
+import WhatsApp from "./pages/whatsapp/Whatsapp";
 function App() {
   return (
     <BrowserRouter>
@@ -98,6 +99,7 @@ function App() {
 <Route path="/sales" element={<Sales />} />
 <Route path="/payments" element={<Payments />} />
 <Route path="/invoices" element={<Invoices />} />
+<Route path="/whatsapp" element={<WhatsApp />} />
 
       </Routes>
     </BrowserRouter>

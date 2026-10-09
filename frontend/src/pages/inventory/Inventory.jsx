@@ -515,9 +515,9 @@ function Inventory() {
             <div>
               <div className="flex items-center gap-3">
 
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-[#F4C64E] shadow-sm">
+                {/* <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-[#F4C64E] shadow-sm">
                   <Boxes size={24} />
-                </div>
+                </div> */}
 
                 <div>
                   <h1 className="text-3xl font-bold tracking-tight text-slate-950">

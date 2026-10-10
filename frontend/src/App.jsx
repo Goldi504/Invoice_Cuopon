@@ -18,6 +18,8 @@ import Sales from "./pages/sales/Sales";
 import Payments from "./pages/payments/Payments";
 import Invoices from "./pages/invoices/Invoices";
 import WhatsApp from "./pages/whatsapp/Whatsapp";
+import Reports from "./pages/reports/Reports";
+import Settings from "./pages/settings/Settings";
 function App() {
   return (
     <BrowserRouter>
@@ -100,6 +102,8 @@ function App() {
 <Route path="/payments" element={<Payments />} />
 <Route path="/invoices" element={<Invoices />} />
 <Route path="/whatsapp" element={<WhatsApp />} />
+<Route path="/reports" element={<Reports />} />
+<Route path="/settings" element={<Settings />} />
 
       </Routes>
     </BrowserRouter>

@@ -17,7 +17,6 @@ import {
   Users,
   LoaderCircle,
 } from "lucide-react";
-
 import api from "../../services/api";
 
 export default function Register() {
@@ -83,22 +82,44 @@ export default function Register() {
     try {
       setLoading(true);
 
-      // Keep this endpoint aligned with your backend.
-      await api.post("/auth/register", {
+      // Matches your backend register-admin route.
+      const response = await api.post("/auth/register-admin", {
         name: formData.name.trim(),
-        email: formData.email.trim(),
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });
 
-      setSuccess("Account created successfully. Redirecting to login...");
+      setSuccess(
+        response.data?.message ||
+          "Account created successfully. Redirecting to login..."
+      );
+
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
 
       setTimeout(() => {
         navigate("/login", { replace: true });
       }, 900);
     } catch (err) {
+      console.error(
+        "Registration error:",
+        err.response?.data || err.message
+      );
+
       setError(
         err.response?.data?.message ||
-          "Unable to create your account. Please try again."
+          err.response?.data?.error ||
+          (err.response?.status === 404
+            ? "Registration route not found. Check your backend API URL."
+            : err.response?.status === 409
+              ? "An account with this email already exists."
+              : err.response?.status === 400
+                ? "Please check your details and try again."
+                : "Unable to create your account. Please check your connection and try again.")
       );
     } finally {
       setLoading(false);
@@ -111,11 +132,9 @@ export default function Register() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_10%_15%,rgba(248,201,86,0.12),transparent_35%),radial-gradient(ellipse_at_85%_80%,rgba(248,201,86,0.06),transparent_35%),linear-gradient(135deg,#191a17_0%,#101416_48%,#101416_100%)]" />
 
       <div className="relative mx-auto grid min-h-screen max-w-[1440px] grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]">
-
         {/* LEFT BRAND SECTION */}
         <section className="relative flex min-h-[650px] flex-col overflow-hidden px-6 py-6 sm:px-10 lg:min-h-screen lg:px-12 lg:py-7 xl:px-14">
           <div className="pointer-events-none absolute -left-24 top-20 h-72 w-72 rounded-full bg-amber-400/[0.07] blur-[100px]" />
-
           <div className="pointer-events-none absolute bottom-20 right-10 h-64 w-64 rounded-full bg-amber-400/[0.05] blur-[100px]" />
 
           {/* Logo and shop name */}
@@ -126,7 +145,11 @@ export default function Register() {
             className="relative z-20 flex items-center gap-4"
           >
             <motion.div
-              whileHover={{ rotateY: 15, rotateX: -10, scale: 1.05 }}
+              whileHover={{
+                rotateY: 15,
+                rotateX: -10,
+                scale: 1.05,
+              }}
               transition={{ type: "spring", stiffness: 250 }}
               style={{ transformPerspective: 500 }}
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#f8c956] text-black shadow-lg shadow-amber-400/20 sm:h-14 sm:w-14"
@@ -354,7 +377,6 @@ export default function Register() {
                 <h2 className="text-2xl font-extrabold tracking-tight">
                   Create Account
                 </h2>
-
                 <p className="mt-1 text-sm text-slate-500">
                   Create your shop admin account
                 </p>
@@ -386,7 +408,6 @@ export default function Register() {
 
               {/* Registration form */}
               <form onSubmit={handleSubmit} className="mt-5 space-y-3">
-
                 {/* Full name */}
                 <div>
                   <label

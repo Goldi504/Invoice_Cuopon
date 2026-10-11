@@ -1,3 +1,4 @@
+
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -6,8 +7,8 @@ const ProtectedRoute = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-[#101416]">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#f8c956] border-t-transparent" />
       </div>
     );
   }

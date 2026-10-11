@@ -1,3 +1,4 @@
+
 import axios from "axios";
 
 const api = axios.create({
@@ -9,7 +10,12 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    // Read the token from either storage location.
+    const token =
+      localStorage.getItem("accessToken") ||
+      sessionStorage.getItem("accessToken") ||
+      localStorage.getItem("token") ||
+      sessionStorage.getItem("token");
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -17,23 +23,27 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 api.interceptors.response.use(
   (response) => response,
-
   (error) => {
     if (error.response?.status === 401) {
+      // Do not redirect automatically for a failed login attempt.
+      if (error.config?.url?.includes("/auth/login")) {
+        return Promise.reject(error);
+      }
+
+      localStorage.removeItem("accessToken");
       localStorage.removeItem("token");
       localStorage.removeItem("user");
 
-      // Don't redirect login API itself
-      if (!error.config?.url?.includes("/auth/login")) {
-        window.location.href = "/login";
-      }
+      sessionStorage.removeItem("accessToken");
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
+
+      window.location.href = "/login";
     }
 
     return Promise.reject(error);

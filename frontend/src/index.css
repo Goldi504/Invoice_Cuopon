@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* Keep browser autofill consistent with the dark login theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #f8c956;
+  -webkit-box-shadow: 0 0 0 1000px #11191b inset !important;
+  box-shadow: 0 0 0 1000px #11191b inset !important;
+  transition: background-color 9999s ease-out;
+}
+
+/* Preserve dark styling for focused inputs */
+input {
+  color-scheme: dark;
+}
+
+
 * {
   box-sizing: border-box;
 }

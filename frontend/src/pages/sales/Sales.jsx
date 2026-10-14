@@ -1,10 +1,4 @@
-
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -51,8 +45,7 @@ const money = (value) =>
   }).format(Number(value) || 0);
 
 const getProductName = (product) =>
-  `${product?.brand || ""} ${product?.model || ""}`.trim() ||
-  "Unknown Product";
+  `${product?.brand || ""} ${product?.model || ""}`.trim() || "Unknown Product";
 
 const pageVariants = {
   hidden: { opacity: 0, y: 18 },
@@ -190,6 +183,7 @@ export default function Sales() {
 
   const [customerForm, setCustomerForm] = useState({
     name: "",
+    email: "",
     mobileNumber: "",
     address: "",
     aadhaarNumber: "",
@@ -226,7 +220,7 @@ export default function Sales() {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Unable to load products and customers. Please try again."
+          "Unable to load products and customers. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -259,26 +253,24 @@ export default function Sales() {
       groups.get(productId).inventoryItems.push(item);
     });
 
-    return Array.from(groups.values()).filter(
-      ({ product, inventoryItems }) => {
-        const query = search.trim().toLowerCase();
+    return Array.from(groups.values()).filter(({ product, inventoryItems }) => {
+      const query = search.trim().toLowerCase();
 
-        const searchable = [
-          product.brand,
-          product.model,
-          product.ram,
-          product.storage,
-          product.color,
-          ...inventoryItems.map((item) => item.imei),
-          ...inventoryItems.map((item) => item.serialNumber),
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
+      const searchable = [
+        product.brand,
+        product.model,
+        product.ram,
+        product.storage,
+        product.color,
+        ...inventoryItems.map((item) => item.imei),
+        ...inventoryItems.map((item) => item.serialNumber),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
-        return !query || searchable.includes(query);
-      }
-    );
+      return !query || searchable.includes(query);
+    });
   }, [inventory, search]);
 
   // ------------------------------------------------
@@ -286,9 +278,8 @@ export default function Sales() {
   // ------------------------------------------------
 
   const subtotal = cart.reduce(
-    (total, item) =>
-      total + item.price * item.inventoryIds.length,
-    0
+    (total, item) => total + item.price * item.inventoryIds.length,
+    0,
   );
 
   const discountAmount = Math.max(0, Number(discount) || 0);
@@ -296,7 +287,7 @@ export default function Sales() {
 
   const totalQuantity = cart.reduce(
     (count, item) => count + item.inventoryIds.length,
-    0
+    0,
   );
 
   // ------------------------------------------------
@@ -304,12 +295,10 @@ export default function Sales() {
   // ------------------------------------------------
 
   const addProduct = (group) => {
-    const alreadySelected = new Set(
-      cart.flatMap((item) => item.inventoryIds)
-    );
+    const alreadySelected = new Set(cart.flatMap((item) => item.inventoryIds));
 
     const availablePhone = group.inventoryItems.find(
-      (item) => !alreadySelected.has(item._id)
+      (item) => !alreadySelected.has(item._id),
     );
 
     if (!availablePhone) {
@@ -322,7 +311,7 @@ export default function Sales() {
 
     setCart((current) => {
       const existing = current.find(
-        (item) => item.productId === group.product._id
+        (item) => item.productId === group.product._id,
       );
 
       if (existing) {
@@ -330,12 +319,9 @@ export default function Sales() {
           item.productId === group.product._id
             ? {
                 ...item,
-                inventoryIds: [
-                  ...item.inventoryIds,
-                  availablePhone._id,
-                ],
+                inventoryIds: [...item.inventoryIds, availablePhone._id],
               }
-            : item
+            : item,
         );
       }
 
@@ -359,16 +345,12 @@ export default function Sales() {
   // ------------------------------------------------
 
   const changeQuantity = (productId, direction) => {
-    const currentItem = cart.find(
-      (item) => item.productId === productId
-    );
+    const currentItem = cart.find((item) => item.productId === productId);
 
     if (!currentItem) return;
 
     if (direction > 0) {
-      const group = products.find(
-        (item) => item.product._id === productId
-      );
+      const group = products.find((item) => item.product._id === productId);
 
       if (!group) {
         setError("Refresh inventory before adding another phone.");
@@ -387,9 +369,9 @@ export default function Sales() {
                 ...item,
                 inventoryIds: item.inventoryIds.slice(0, -1),
               }
-            : item
+            : item,
         )
-        .filter((item) => item.inventoryIds.length > 0)
+        .filter((item) => item.inventoryIds.length > 0),
     );
   };
 
@@ -399,7 +381,7 @@ export default function Sales() {
 
   const removeProduct = (productId) => {
     setCart((current) =>
-      current.filter((item) => item.productId !== productId)
+      current.filter((item) => item.productId !== productId),
     );
   };
 
@@ -460,9 +442,7 @@ export default function Sales() {
         !customerForm.mobileNumber.trim() ||
         !customerForm.address.trim())
     ) {
-      setError(
-        "Customer name, mobile number, and address are required."
-      );
+      setError("Customer name, mobile number, and address are required.");
       return;
     }
 
@@ -475,9 +455,7 @@ export default function Sales() {
         selectedCustomerId = await createNewCustomer();
       }
 
-      const inventoryIds = cart.flatMap(
-        (item) => item.inventoryIds
-      );
+      const inventoryIds = cart.flatMap((item) => item.inventoryIds);
 
       const response = await createSale({
         inventoryIds,
@@ -490,9 +468,7 @@ export default function Sales() {
 
       setLastSale(sale);
 
-      setSuccess(
-        `Sale ${sale.invoiceNumber} saved. Payment is pending.`
-      );
+      setSuccess(`Sale ${sale.invoiceNumber} saved. Payment is pending.`);
 
       await loadData();
 
@@ -500,7 +476,7 @@ export default function Sales() {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Could not save the sale. Please check the backend response."
+          "Could not save the sale. Please check the backend response.",
       );
     } finally {
       setSaving(false);
@@ -511,61 +487,109 @@ export default function Sales() {
   // Proceed to payment
   // ------------------------------------------------
 
-  const handleProceedToPayment = async () => {
-    let sale = lastSale;
+ 
+const handleProceedToPayment = async () => {
+  setError("");
+  setSuccess("");
 
-    if (!sale) {
-      sale = await handleSaveSale();
-    }
+  let sale = lastSale;
 
-    if (!sale) return;
+  if (!sale) {
+    sale = await handleSaveSale();
+  }
 
-    if (!sale.paymentId) {
-      setError(
-        "The sale response did not include a payment ID. Check your sale API response."
+  if (!sale) return;
+
+  if (!sale.saleId || !sale.paymentId) {
+    setError(
+      "The sale or payment ID is missing. Check the create-sale API response."
+    );
+    return;
+  }
+
+  // Cash on Delivery remains pending until payment is received.
+  if (paymentMethod === "COD") {
+    setSuccess(
+      `Sale ${sale.invoiceNumber} saved. Payment is pending until received.`
+    );
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Confirm receipt of ${money(sale.finalAmount ?? total)} using ${paymentMethod}?`
+  );
+
+  if (!confirmed) return;
+
+  setSaving(true);
+
+  try {
+    // 1. Complete payment for this exact sale.
+    await completePayment(sale.paymentId);
+
+    setSuccess("Payment received. Generating invoice...");
+
+    // 2. Generate invoice using the same unique Sale ID.
+    const invoiceResponse = await api.post("/invoices", {
+      saleId: sale.saleId,
+    });
+
+    const invoice = invoiceResponse.data.invoice;
+
+    if (!invoice?._id) {
+      throw new Error(
+        "Payment succeeded, but the invoice ID was not returned."
       );
-      return;
     }
 
-    if (paymentMethod === "COD") {
-      setSuccess(
-        `Sale ${sale.invoiceNumber} is saved with Cash on Delivery. Complete payment when received.`
-      );
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Confirm that the customer has paid ${money(
-        sale.amount ?? total
-      )} using ${paymentMethod}?`
+    // 3. Generate the PDF for this invoice.
+    const pdfResponse = await api.get(
+      `/invoices/${invoice._id}/pdf`
     );
 
-    if (!confirmed) return;
+    const fileUrl = pdfResponse.data.fileUrl;
 
-    setSaving(true);
-    setError("");
+    // 4. Open the generated PDF.
+    if (fileUrl) {
+      window.open(
+        `http://localhost:5000${fileUrl}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    }
 
+    // 5. Send the digital receipt to the same customer's WhatsApp.
     try {
-      await completePayment(sale.paymentId);
+      await api.post(`/whatsapp/invoice/${invoice._id}`);
 
       setSuccess(
-        `Payment completed successfully for ${sale.invoiceNumber}.`
+        `Payment completed. Invoice ${invoice.invoiceNumber} generated and WhatsApp receipt sent.`
       );
-
-      setCart([]);
-      setDiscount("0");
-      setLastSale(null);
-
-      await loadData();
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Payment could not be completed."
+    } catch (whatsappError) {
+      setSuccess(
+        `Payment completed and invoice ${invoice.invoiceNumber} generated. WhatsApp delivery failed: ${
+          whatsappError.response?.data?.message ||
+          "Check your Twilio WhatsApp configuration."
+        }`
       );
-    } finally {
-      setSaving(false);
     }
-  };
+
+    // Keep lastSale until the workflow finishes.
+    setCart([]);
+    setDiscount("0");
+
+    await loadData();
+  } catch (err) {
+    setError(
+      err.response?.data?.message ||
+        err.message ||
+        "The payment or invoice workflow failed. Check the saved sale before retrying."
+    );
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   // ------------------------------------------------
   // Render
@@ -588,11 +612,8 @@ export default function Sales() {
             className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
           >
             <div>
-              
-
               <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
                 Create Sale (POS)
-               
               </h1>
 
               <p className="mt-2 text-sm text-gray-500">
@@ -621,9 +642,9 @@ export default function Sales() {
           >
             <StatCard
               title="Available Inventory"
-              value={inventory.filter(
-                (item) => item.status === "AVAILABLE"
-              ).length}
+              value={
+                inventory.filter((item) => item.status === "AVAILABLE").length
+              }
               subtitle="Units ready for sale"
               icon={Package}
             />
@@ -677,10 +698,7 @@ export default function Sales() {
                 exit={{ opacity: 0, y: -8 }}
                 className="mb-5 flex items-start gap-2 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800"
               >
-                <CheckCircle2
-                  size={18}
-                  className="mt-0.5 shrink-0"
-                />
+                <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
                 <span className="flex-1">{success}</span>
 
                 <button
@@ -705,14 +723,13 @@ export default function Sales() {
               className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
             >
               <div className="mb-5 flex items-center justify-between gap-3">
-                <h2 className="text-lg font-bold">
-                  Select Products
-                </h2>
+                <h2 className="text-lg font-bold">Select Products</h2>
 
                 <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">
-                  {inventory.filter(
-                    (item) => item.status === "AVAILABLE"
-                  ).length}{" "}
+                  {
+                    inventory.filter((item) => item.status === "AVAILABLE")
+                      .length
+                  }{" "}
                   available
                 </span>
               </div>
@@ -744,14 +761,9 @@ export default function Sales() {
                   animate={{ opacity: 1 }}
                   className="flex min-h-56 flex-col items-center justify-center text-center"
                 >
-                  <Smartphone
-                    size={35}
-                    className="mb-3 text-gray-300"
-                  />
+                  <Smartphone size={35} className="mb-3 text-gray-300" />
 
-                  <p className="font-semibold">
-                    No available products found
-                  </p>
+                  <p className="font-semibold">No available products found</p>
 
                   <p className="mt-1 text-sm text-gray-500">
                     Check your inventory or change your search.
@@ -762,20 +774,18 @@ export default function Sales() {
                   <AnimatePresence mode="popLayout">
                     {products.map(({ product, inventoryItems }, index) => {
                       const cartItem = cart.find(
-                        (item) => item.productId === product._id
+                        (item) => item.productId === product._id,
                       );
 
-                      const quantity =
-                        cartItem?.inventoryIds.length || 0;
+                      const quantity = cartItem?.inventoryIds.length || 0;
 
                       const alreadySelected = new Set(
-                        cart.flatMap((item) => item.inventoryIds)
+                        cart.flatMap((item) => item.inventoryIds),
                       );
 
-                      const availableCount =
-                        inventoryItems.filter(
-                          (item) => !alreadySelected.has(item._id)
-                        ).length;
+                      const availableCount = inventoryItems.filter(
+                        (item) => !alreadySelected.has(item._id),
+                      ).length;
 
                       return (
                         <motion.div
@@ -821,10 +831,7 @@ export default function Sales() {
                                 className="h-full w-full object-cover"
                               />
                             ) : (
-                              <Smartphone
-                                size={26}
-                                className="text-gray-400"
-                              />
+                              <Smartphone size={26} className="text-gray-400" />
                             )}
                           </div>
 
@@ -834,11 +841,7 @@ export default function Sales() {
                             </h3>
 
                             <p className="mt-1 text-xs text-gray-500">
-                              {[
-                                product.ram,
-                                product.storage,
-                                product.color,
-                              ]
+                              {[product.ram, product.storage, product.color]
                                 .filter(Boolean)
                                 .join(" • ") || "Mobile phone"}
                             </p>
@@ -860,9 +863,7 @@ export default function Sales() {
                                 addProduct({ product, inventoryItems })
                               }
                               whileHover={
-                                availableCount > 0
-                                  ? { scale: 1.08, y: -2 }
-                                  : {}
+                                availableCount > 0 ? { scale: 1.08, y: -2 } : {}
                               }
                               whileTap={{ scale: 0.92 }}
                               transition={buttonTransition}
@@ -942,10 +943,7 @@ export default function Sales() {
                       ease: "easeInOut",
                     }}
                   >
-                    <ShoppingCart
-                      size={30}
-                      className="mb-2 text-gray-300"
-                    />
+                    <ShoppingCart size={30} className="mb-2 text-gray-300" />
                   </motion.div>
 
                   <p className="text-sm font-semibold text-gray-600">
@@ -1004,9 +1002,7 @@ export default function Sales() {
                             type="button"
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.85 }}
-                            onClick={() =>
-                              changeQuantity(item.productId, -1)
-                            }
+                            onClick={() => changeQuantity(item.productId, -1)}
                             className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 transition hover:border-amber-300 hover:bg-amber-50"
                             aria-label={`Decrease ${item.name} quantity`}
                           >
@@ -1026,9 +1022,7 @@ export default function Sales() {
                             type="button"
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.85 }}
-                            onClick={() =>
-                              changeQuantity(item.productId, 1)
-                            }
+                            onClick={() => changeQuantity(item.productId, 1)}
                             disabled={
                               !products.some(
                                 (group) =>
@@ -1037,10 +1031,10 @@ export default function Sales() {
                                     (phone) =>
                                       !cart.some((cartProduct) =>
                                         cartProduct.inventoryIds.includes(
-                                          phone._id
-                                        )
-                                      )
-                                  )
+                                          phone._id,
+                                        ),
+                                      ),
+                                  ),
                               )
                             }
                             className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 transition hover:border-amber-300 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40"
@@ -1102,13 +1096,10 @@ export default function Sales() {
                     >
                       {[
                         ["name", "Full name", "text"],
+                        ["email", "Email address (optional)", "email"],
                         ["mobileNumber", "Mobile number", "tel"],
                         ["address", "Address", "text"],
-                        [
-                          "aadhaarNumber",
-                          "Aadhaar number (optional)",
-                          "text",
-                        ],
+                        ["aadhaarNumber", "Aadhaar number (optional)", "text"],
                         ["city", "City", "text"],
                         ["state", "State", "text"],
                         ["pincode", "PIN code", "text"],
@@ -1137,18 +1128,13 @@ export default function Sales() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       value={customerId}
-                      onChange={(event) =>
-                        setCustomerId(event.target.value)
-                      }
+                      onChange={(event) => setCustomerId(event.target.value)}
                       className="w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm outline-none transition focus:border-[#D4AF37] focus:ring-4 focus:ring-amber-100"
                     >
                       <option value="">Select customer...</option>
 
                       {customers.map((customer) => (
-                        <option
-                          key={customer._id}
-                          value={customer._id}
-                        >
+                        <option key={customer._id} value={customer._id}>
                           {customer.name} — {customer.mobileNumber}
                         </option>
                       ))}
@@ -1166,9 +1152,7 @@ export default function Sales() {
 
                 <select
                   value={paymentMethod}
-                  onChange={(event) =>
-                    setPaymentMethod(event.target.value)
-                  }
+                  onChange={(event) => setPaymentMethod(event.target.value)}
                   className="w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm outline-none transition focus:border-[#D4AF37] focus:ring-4 focus:ring-amber-100"
                 >
                   <option value="CASH">Cash</option>
@@ -1231,11 +1215,7 @@ export default function Sales() {
               <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <AnimatedButton
                   variant="outline"
-                  disabled={
-                    saving ||
-                    cart.length === 0 ||
-                    Boolean(lastSale)
-                  }
+                  disabled={saving || cart.length === 0 || Boolean(lastSale)}
                   onClick={handleSaveSale}
                   className="py-3.5"
                 >
@@ -1281,9 +1261,7 @@ export default function Sales() {
                       Invoice: {lastSale.invoiceNumber}
                     </p>
 
-                    <p className="mt-1 text-green-700">
-                      Payment: Pending
-                    </p>
+                    <p className="mt-1 text-green-700">Payment: Pending</p>
 
                     <motion.button
                       type="button"

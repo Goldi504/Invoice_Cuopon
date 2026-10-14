@@ -7,6 +7,13 @@ const customerSchema = new mongoose.Schema(
       required: [true, "Customer name is required"],
       trim: true,
     },
+     email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: "",
+    },
+
 
     mobileNumber: {
       type: String,

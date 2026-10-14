@@ -9,6 +9,11 @@ const invoiceSchema = new mongoose.Schema(
       index: true,
     },
 
+    email: {
+      type: String,
+      default: "",
+    },
+
     saleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Sale",
@@ -78,6 +83,33 @@ const invoiceSchema = new mongoose.Schema(
       },
     },
 
+    items: [
+      {
+        productId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+        },
+
+        productName: {
+          type: String,
+          required: true,
+        },
+
+        imei: {
+          type: String,
+          default: "",
+        },
+
+        sellingPrice: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+      },
+    ],
+
+
+
     // Money details
     price: {
       type: Number,
@@ -110,6 +142,8 @@ const invoiceSchema = new mongoose.Schema(
         "CASH",
         "UPI",
         "CARD",
+        "ONLINE",
+        "COD",
         "BANK_TRANSFER",
       ],
       required: true,

@@ -8,6 +8,7 @@ const createCustomer = async (req, res) => {
   try {
     const {
       name,
+      email,
       mobileNumber,
       aadhaarNumber,
       address,
@@ -37,12 +38,13 @@ const createCustomer = async (req, res) => {
 
     const customer = await Customer.create({
       name,
-      mobileNumber,
-      aadhaarNumber: aadhaarNumber || "",
-      address,
-      city: city || "",
-      state: state || "",
-      pincode: pincode || "",
+  email: email || "",
+  mobileNumber,
+  aadhaarNumber: aadhaarNumber || "",
+  address,
+  city: city || "",
+  state: state || "",
+  pincode: pincode || "",
     });
 
     return res.status(201).json({

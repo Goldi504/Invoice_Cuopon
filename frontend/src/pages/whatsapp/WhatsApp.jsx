@@ -65,23 +65,69 @@ const getInvoiceId = (invoice) =>
   invoice?._id || invoice?.id || "";
 
 const getInvoiceTotal = (invoice) =>
-  invoice?.totalAmount ??
+ invoice?.totalAmount ??
   invoice?.grandTotal ??
   invoice?.total ??
-  invoice?.sale?.totalAmount ??
-  invoice?.sale?.grandTotal ??
   invoice?.amount ??
   0;
 
+
 const getInvoiceCustomerId = (invoice) => {
   const customer =
+     invoice?.customerId ||
     invoice?.customer ||
-    invoice?.sale?.customer ||
-    invoice?.sale?.customerId;
+    invoice?.sale?.customerId ||
+    invoice?.sale?.customer;
 
   return typeof customer === "object"
     ? getCustomerId(customer)
     : customer || "";
+};
+const getInvoiceDate = (invoice) => {
+  const date = invoice?.invoiceDate || invoice?.createdAt;
+
+  if (!date) return "";
+
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) return "";
+
+  return parsedDate.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+const getProductDetails = (invoice) =>
+  invoice?.productDetails || {};
+
+const getInvoiceCustomer = (invoice, selectedCustomer) => {
+  const customer = invoice?.customerDetails;
+
+  if (customer && typeof customer === "object") {
+    return customer;
+  }
+
+  if (
+    invoice?.customerId &&
+    typeof invoice.customerId === "object"
+  ) {
+    return invoice.customerId;
+  }
+
+  return selectedCustomer || {};
+};
+
+const addMessageLine = (label, value) => {
+  if (
+    value === undefined ||
+    value === null ||
+    String(value).trim() === ""
+  ) {
+    return "";
+  }
+
+  return `${label}: ${String(value).trim()}`;
 };
 
 function StatCard({ title, value, icon: Icon, tone, index }) {
@@ -211,48 +257,88 @@ function WhatsApp() {
     [invoices, invoiceId]
   );
 
-  const previewText = useMemo(() => {
-    const name = getCustomerName(selectedCustomer);
-    const invoiceNumber = selectedInvoice
-      ? getInvoiceNumber(selectedInvoice) || "Invoice"
-      : "your invoice";
+ 
+const previewText = useMemo(() => {
+  const customer = getInvoiceCustomer(
+    selectedInvoice,
+    selectedCustomer
+  );
 
-    const amount = selectedInvoice
-      ? formatMoney(getInvoiceTotal(selectedInvoice))
-      : "Select an invoice";
+  const product = getProductDetails(selectedInvoice);
 
-    return `Hello ${name},
+  const customerName = getCustomerName(customer);
+  const customerPhone =
+    getCustomerPhone(customer) ||
+    getCustomerPhone(selectedCustomer);
 
-Here is your invoice ${invoiceNumber}
+  const invoiceNumber = getInvoiceNumber(selectedInvoice);
+  const invoiceDate = getInvoiceDate(selectedInvoice);
 
-Total Amount: ${amount}
-
-${message.trim() || DEFAULT_MESSAGE}
-
-Ganesh Mobile Shop
-Bhopal, Madhya Pradesh`;
-  }, [selectedCustomer, selectedInvoice, message]);
-
-  const handleCustomerChange = (value) => {
-    setCustomerId(value);
-    setError("");
-    setNotice("");
-
-    const firstMatchingInvoice = invoices.find((invoice) => {
-      const linkedCustomerId = getInvoiceCustomerId(invoice);
-
-      return (
-        !linkedCustomerId ||
-        linkedCustomerId === value
-      );
-    });
-
-    setInvoiceId(
-      firstMatchingInvoice
-        ? getInvoiceId(firstMatchingInvoice)
+  const lines = [
+    `Hello ${customerName},`,
+    "",
+    "Thank you for shopping with Ganesh Mobile Shop!",
+    "",
+    "🧾 INVOICE DETAILS",
+    addMessageLine("Invoice No.", invoiceNumber),
+    addMessageLine("Invoice Date", invoiceDate),
+    "",
+    "📱 PRODUCT DETAILS",
+    addMessageLine(
+      "Product",
+      product.productName || product.name
+    ),
+    addMessageLine("Brand", product.brand),
+    addMessageLine("Model", product.model),
+    addMessageLine("IMEI", product.imei),
+    addMessageLine("Second IMEI", product.secondImei),
+    addMessageLine("Serial Number", product.serialNumber),
+    "",
+    "💰 PAYMENT DETAILS",
+    addMessageLine("Price", formatMoney(selectedInvoice?.price)),
+    addMessageLine(
+      "Discount",
+      selectedInvoice?.discount != null
+        ? formatMoney(selectedInvoice.discount)
         : ""
-    );
-  };
+    ),
+    addMessageLine(
+      "GST",
+      selectedInvoice?.gst != null
+        ? `${selectedInvoice.gst}%`
+        : ""
+    ),
+    addMessageLine(
+      "Total Amount",
+      selectedInvoice
+        ? formatMoney(getInvoiceTotal(selectedInvoice))
+        : ""
+    ),
+    addMessageLine(
+      "Payment Method",
+      selectedInvoice?.paymentMethod
+    ),
+    addMessageLine(
+      "Payment Status",
+      selectedInvoice?.paymentStatus
+    ),
+    "",
+    "🛡️ WARRANTY & GUARANTEE",
+    addMessageLine("Warranty", selectedInvoice?.warranty),
+    addMessageLine("Guarantee", selectedInvoice?.guarantee),
+    "",
+    "🏪 Ganesh Mobile Shop",
+    "Bhopal, Madhya Pradesh",
+    customerPhone
+      ? addMessageLine("Customer Mobile", customerPhone)
+      : "",
+    "",
+    message.trim() || DEFAULT_MESSAGE,
+  ];
+
+  return lines.filter((line) => line !== "").join("\n");
+}, [selectedCustomer, selectedInvoice, message]);
+
 
   const handleSend = () => {
     setError("");

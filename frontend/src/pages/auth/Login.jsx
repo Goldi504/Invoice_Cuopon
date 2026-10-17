@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -24,6 +25,7 @@ export default function Login() {
     email: "",
     password: "",
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,7 +40,12 @@ export default function Login() {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setFormData((previous) => ({ ...previous, [name]: value }));
+
+    setFormData((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+
     if (error) setError("");
   };
 
@@ -60,6 +67,7 @@ export default function Login() {
       });
 
       const data = response.data;
+
       const token =
         data?.accessToken ||
         data?.token ||
@@ -70,7 +78,9 @@ export default function Login() {
 
       if (!token) {
         console.error("Login API response:", data);
-        throw new Error("No login token received. Check your backend response.");
+        throw new Error(
+          "No login token received. Check your backend response."
+        );
       }
 
       const storage = rememberMe ? localStorage : sessionStorage;
@@ -83,11 +93,14 @@ export default function Login() {
       storage.setItem("accessToken", token);
       storage.setItem("token", token);
 
-      if (user) storage.setItem("user", JSON.stringify(user));
+      if (user) {
+        storage.setItem("user", JSON.stringify(user));
+      }
 
       navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error("Login error:", err.response?.data || err.message);
+
       setError(
         err.response?.data?.message ||
           err.response?.data?.error ||
@@ -101,32 +114,31 @@ export default function Login() {
 
   return (
     <main className="relative min-h-dvh overflow-x-hidden bg-[#101416] text-white lg:h-dvh lg:min-h-0 lg:overflow-hidden">
-      {/* Original background colors */}
+      {/* Background */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_5%_10%,rgba(248,201,86,0.20),transparent_35%),radial-gradient(ellipse_at_90%_40%,rgba(56,130,150,0.18),transparent_38%),radial-gradient(ellipse_at_65%_95%,rgba(248,201,86,0.12),transparent_35%),linear-gradient(135deg,#22221d_0%,#101416_48%,#171c1e_100%)]" />
+
       <div className="pointer-events-none absolute -left-24 top-20 h-72 w-72 rounded-full bg-amber-400/[0.08] blur-[100px]" />
 
-      {/* Fixed-height header */}
+      {/* Header */}
       <header className="relative z-20 mx-auto flex h-[76px] max-w-[1600px] items-center gap-3 px-5 sm:px-10 lg:px-12 xl:px-16">
-        <motion.div
-          whileHover={{ scale: 1.05, rotate: 4 }}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#ffe69a] via-[#f8c956] to-[#dca72e] text-black shadow-lg shadow-amber-400/20 sm:h-12 sm:w-12"
-        >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#ffe69a] via-[#f8c956] to-[#dca72e] text-black shadow-lg shadow-amber-400/20 sm:h-12 sm:w-12">
           <Store size={25} strokeWidth={2.5} />
-        </motion.div>
+        </div>
 
         <div>
           <h2 className="text-lg font-extrabold tracking-tight sm:text-2xl">
             Ganesh Mobile Shop
           </h2>
+
           <p className="mt-0.5 text-xs text-slate-400 sm:text-sm">
             Shop Management System
           </p>
         </div>
       </header>
 
-      {/* Desktop content fills the remaining viewport */}
+      {/* Main content */}
       <div className="relative mx-auto grid max-w-[1600px] grid-cols-1 items-center gap-8 px-5 py-7 sm:px-10 lg:h-[calc(100dvh-76px)] lg:min-h-0 lg:grid-cols-[1.08fr_0.92fr] lg:gap-5 lg:px-10 lg:py-2 xl:gap-8 xl:px-14">
-        {/* LEFT: text and features */}
+        {/* Left content */}
         <section className="relative z-10 flex min-w-0 flex-col justify-center py-3 lg:h-full lg:min-h-0">
           <motion.div
             initial={{ opacity: 0, x: -25 }}
@@ -152,13 +164,17 @@ export default function Login() {
             </p>
           </motion.div>
 
+          {/* Feature cards */}
           <motion.div
             initial="hidden"
             animate="visible"
             variants={{
               hidden: {},
               visible: {
-                transition: { staggerChildren: 0.07, delayChildren: 0.2 },
+                transition: {
+                  staggerChildren: 0.07,
+                  delayChildren: 0.2,
+                },
               },
             }}
             className="mt-6 grid max-w-[500px] grid-cols-1 gap-3 sm:grid-cols-2 lg:mt-5"
@@ -175,12 +191,17 @@ export default function Login() {
                   borderColor: "rgba(248,201,86,0.3)",
                   backgroundColor: "rgba(255,255,255,0.08)",
                 }}
-                transition={{ type: "spring", stiffness: 250, damping: 18 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 250,
+                  damping: 18,
+                }}
                 className="flex min-h-[56px] items-center gap-3 rounded-xl border border-white/10 bg-white/[0.045] p-3"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-300/10 bg-amber-300/10 text-[#f8c956]">
                   <Icon size={18} />
                 </div>
+
                 <span className="text-sm font-semibold text-slate-100">
                   {label}
                 </span>
@@ -188,16 +209,20 @@ export default function Login() {
             ))}
           </motion.div>
 
+          {/* Footer */}
           <footer className="mt-6 border-t border-white/10 pt-3 text-xs text-slate-400 lg:mt-5">
             <div className="flex flex-wrap justify-between gap-2">
-              <span>© {new Date().getFullYear()} Ganesh Mobile Shop</span>
+              <span>
+                © {new Date().getFullYear()} Ganesh Mobile Shop
+              </span>
               <span>Shop Smarter, Grow Faster.</span>
             </div>
           </footer>
         </section>
 
-        {/* RIGHT: curved divider and smartphone */}
+        {/* Right content: fixed phone */}
         <section className="relative flex min-w-0 items-center justify-center py-5 lg:h-full lg:min-h-0 lg:overflow-visible">
+          {/* Static gold divider */}
           <svg
             aria-hidden="true"
             viewBox="0 0 160 800"
@@ -211,6 +236,7 @@ export default function Login() {
               strokeOpacity="0.12"
               strokeWidth="32"
             />
+
             <path
               d="M5,-30 C145,100 140,220 65,340 C5,450 20,535 95,650 C135,710 145,770 80,830"
               fill="none"
@@ -220,92 +246,62 @@ export default function Login() {
             />
           </svg>
 
-          {/* Scale phone down on shorter desktop screens */}
-          <motion.div
-            initial={{ opacity: 0, x: 25, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-            className="relative z-10 flex w-full items-center justify-center lg:pl-7"
-          >
-            <motion.div
-              animate={{
-                y: [0, -6, 0, 5, 0],
-                rotateY: [-2, 2, -1, 2, -2],
-                rotateZ: [-0.4, 0.4, -0.2, 0.2, -0.4],
-              }}
-              transition={{
-                duration: 7,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
+          {/* No entrance, floating, or rotation animation */}
+          <div className="relative z-10 flex w-full items-center justify-center lg:pl-7">
+            <div
               style={{
                 transformPerspective: 1200,
                 transformStyle: "preserve-3d",
               }}
               className="relative w-[min(82vw,330px)] sm:w-[330px] lg:w-[285px] lg:scale-[0.84] xl:w-[320px] xl:scale-[0.9] 2xl:scale-100"
             >
-              <motion.div
-                animate={{
-                  opacity: [0.2, 0.4, 0.2],
-                  scale: [0.9, 1.05, 0.9],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                className="absolute inset-5 rounded-full bg-amber-400/20 blur-3xl"
-              />
+              {/* Static background glow */}
+              <div className="pointer-events-none absolute inset-5 rounded-full bg-amber-400/20 blur-3xl" />
 
               {/* Phone frame */}
               <div className="relative rounded-[43px] border-[5px] border-[#62615b] bg-gradient-to-br from-[#a9a79c] via-[#292e2e] to-[#090d0e] p-[5px] shadow-[0_30px_80px_rgba(0,0,0,0.48)]">
                 <div className="pointer-events-none absolute inset-0 rounded-[38px] border border-white/20" />
+
                 <div className="absolute -right-[8px] top-24 h-12 w-[4px] rounded-r-md bg-[#77756b]" />
                 <div className="absolute -left-[8px] top-20 h-9 w-[4px] rounded-l-md bg-[#77756b]" />
 
-                {/* Screen */}
+                {/* Phone screen */}
                 <div className="relative overflow-hidden rounded-[33px] bg-[#101719]">
                   <div className="relative flex h-8 items-center justify-between bg-[#1b2426] px-4 text-[9px] text-slate-200">
                     <span className="flex items-center gap-1.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-[#f8c956]" />
                       Ganesh Shop
                     </span>
+
                     <span className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black ring-1 ring-white/10" />
+
                     <span>9:41</span>
                   </div>
 
                   <div className="relative min-h-[450px] bg-gradient-to-b from-[#172123] via-[#11191b] to-[#101416] px-5 pb-4 pt-4">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_at_50%_0%,rgba(248,201,86,0.16),transparent_70%)]" />
 
+                    {/* Static shop icon */}
                     <div className="relative flex h-[100px] flex-col items-center justify-center">
-                      <motion.div
-                        animate={{
-                          y: [0, -4, 0],
-                          rotateY: [-5, 5, -5],
-                        }}
-                        transition={{
-                          duration: 4,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                        style={{ transformPerspective: 500 }}
-                        className="relative flex h-[65px] w-[65px] items-center justify-center rounded-[20px] border border-amber-300/25 bg-gradient-to-br from-[#323b39] to-[#151b1c] text-[#f8c956] shadow-xl shadow-black/30"
-                      >
+                      <div className="relative flex h-[65px] w-[65px] items-center justify-center rounded-[20px] border border-amber-300/25 bg-gradient-to-br from-[#323b39] to-[#151b1c] text-[#f8c956] shadow-xl shadow-black/30">
                         <Store size={32} />
+
                         <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-[#101719] bg-[#f8c956] text-[#151918]">
                           <ShieldCheck size={13} />
                         </span>
-                      </motion.div>
+                      </div>
+
                       <p className="mt-2 text-[9px] font-semibold tracking-wide text-slate-300">
                         YOUR SHOP, YOUR CONTROL
                       </p>
                     </div>
 
-                    {/* Transparent login form */}
+                    {/* Login form */}
                     <div className="relative mt-1">
                       <h2 className="text-center text-2xl font-extrabold tracking-tight text-white">
                         Welcome Back
                       </h2>
+
                       <p className="mt-1 text-center text-[11px] text-slate-400">
                         Login to your account
                       </p>
@@ -313,13 +309,17 @@ export default function Login() {
                       {error && (
                         <div
                           role="alert"
-                          className="mt-3 rounded-lg border border-red-400/25 bg-red-400/10 px-3 py-2 text-[10px] leading-4 text-red-200"
+                          className="mt-3 break-words rounded-lg border border-red-400/25 bg-red-400/10 px-3 py-2 text-[10px] leading-4 text-red-200"
                         >
                           {error}
                         </div>
                       )}
 
-                      <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+                      <form
+                        onSubmit={handleSubmit}
+                        className="mt-4 space-y-3"
+                      >
+                        {/* Email */}
                         <div>
                           <label
                             htmlFor="email"
@@ -327,8 +327,13 @@ export default function Login() {
                           >
                             Email address
                           </label>
+
                           <div className="group flex h-10 items-center gap-2.5 rounded-xl border border-white/15 bg-black/20 px-3 transition-all focus-within:border-[#f8c956]/80 focus-within:ring-2 focus-within:ring-[#f8c956]/10">
-                            <Mail size={15} className="shrink-0 text-slate-400 group-focus-within:text-[#f8c956]" />
+                            <Mail
+                              size={15}
+                              className="shrink-0 text-slate-400 group-focus-within:text-[#f8c956]"
+                            />
+
                             <input
                               id="email"
                               name="email"
@@ -338,11 +343,12 @@ export default function Login() {
                               value={formData.email}
                               onChange={handleChange}
                               required
-                              className="h-full min-w-0 w-full bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
+                              className="h-full w-full min-w-0 bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
                             />
                           </div>
                         </div>
 
+                        {/* Password */}
                         <div>
                           <label
                             htmlFor="password"
@@ -350,8 +356,13 @@ export default function Login() {
                           >
                             Password
                           </label>
+
                           <div className="group flex h-10 items-center gap-2.5 rounded-xl border border-white/15 bg-black/20 px-3 transition-all focus-within:border-[#f8c956]/80 focus-within:ring-2 focus-within:ring-[#f8c956]/10">
-                            <LockKeyhole size={15} className="shrink-0 text-slate-400 group-focus-within:text-[#f8c956]" />
+                            <LockKeyhole
+                              size={15}
+                              className="shrink-0 text-slate-400 group-focus-within:text-[#f8c956]"
+                            />
+
                             <input
                               id="password"
                               name="password"
@@ -361,29 +372,44 @@ export default function Login() {
                               value={formData.password}
                               onChange={handleChange}
                               required
-                              className="h-full min-w-0 w-full bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
+                              className="h-full w-full min-w-0 bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
                             />
+
                             <button
                               type="button"
-                              onClick={() => setShowPassword((previous) => !previous)}
-                              aria-label={showPassword ? "Hide password" : "Show password"}
+                              onClick={() =>
+                                setShowPassword((previous) => !previous)
+                              }
+                              aria-label={
+                                showPassword
+                                  ? "Hide password"
+                                  : "Show password"
+                              }
                               className="shrink-0 text-slate-400 transition hover:text-[#f8c956]"
                             >
-                              {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                              {showPassword ? (
+                                <EyeOff size={15} />
+                              ) : (
+                                <Eye size={15} />
+                              )}
                             </button>
                           </div>
                         </div>
 
+                        {/* Remember me and forgot password */}
                         <div className="flex items-center justify-between gap-2 text-[10px]">
                           <label className="flex cursor-pointer items-center gap-1.5 text-slate-400">
                             <input
                               type="checkbox"
                               checked={rememberMe}
-                              onChange={(event) => setRememberMe(event.target.checked)}
+                              onChange={(event) =>
+                                setRememberMe(event.target.checked)
+                              }
                               className="h-3.5 w-3.5 accent-[#f8c956]"
                             />
                             Remember me
                           </label>
+
                           <Link
                             to="/forgot-password"
                             className="text-slate-400 transition hover:text-[#f8c956]"
@@ -392,16 +418,24 @@ export default function Login() {
                           </Link>
                         </div>
 
+                        {/* Login button */}
                         <motion.button
                           type="submit"
                           disabled={loading}
-                          whileHover={loading ? {} : { y: -2, scale: 1.01 }}
-                          whileTap={loading ? {} : { scale: 0.98 }}
+                          whileHover={
+                            loading ? {} : { y: -2, scale: 1.01 }
+                          }
+                          whileTap={
+                            loading ? {} : { scale: 0.98 }
+                          }
                           className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ffe69a] via-[#f8c956] to-[#dca72e] px-3 text-xs font-extrabold text-[#171914] shadow-lg shadow-amber-900/10 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
                         >
                           {loading ? (
                             <>
-                              <LoaderCircle size={15} className="animate-spin" />
+                              <LoaderCircle
+                                size={15}
+                                className="animate-spin"
+                              />
                               Signing in...
                             </>
                           ) : (
@@ -412,10 +446,12 @@ export default function Login() {
                         </motion.button>
                       </form>
 
+                      {/* Register link */}
                       <div className="mt-4 border-t border-white/10 pt-3 text-center">
                         <p className="text-[10px] text-slate-400">
                           Don't have an account?
                         </p>
+
                         <Link
                           to="/register"
                           className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-[#f8c956] transition hover:text-[#ffe69a]"
@@ -424,14 +460,18 @@ export default function Login() {
                         </Link>
                       </div>
 
+                      {/* Security message */}
                       <div className="mt-3 flex items-center justify-center gap-1.5 text-[9px] text-slate-400">
-                        <ShieldCheck size={12} className="text-emerald-400" />
+                        <ShieldCheck
+                          size={12}
+                          className="text-emerald-400"
+                        />
                         Secure access to your shop
                       </div>
                     </div>
                   </div>
 
-                  {/* Bottom phone navigation */}
+                  {/* Phone navigation */}
                   <div className="flex h-7 items-center justify-center gap-12 bg-[#080b0c]">
                     <span className="h-2.5 w-2.5 rotate-45 border-b-2 border-l-2 border-slate-300" />
                     <span className="h-2.5 w-2.5 rounded-full border border-slate-300" />
@@ -440,20 +480,10 @@ export default function Login() {
                 </div>
               </div>
 
-              <motion.div
-                animate={{
-                  opacity: [0.2, 0.4, 0.2],
-                  scaleX: [0.85, 1.08, 0.85],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                className="absolute -bottom-5 left-8 right-8 h-7 rounded-full bg-amber-400/20 blur-xl"
-              />
-            </motion.div>
-          </motion.div>
+              {/* Static bottom glow */}
+              <div className="pointer-events-none absolute -bottom-5 left-8 right-8 h-7 rounded-full bg-amber-400/20 blur-xl" />
+            </div>
+          </div>
         </section>
       </div>
     </main>

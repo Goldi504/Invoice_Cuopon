@@ -127,19 +127,16 @@ export default function Register() {
 
   return (
     <main className="relative min-h-dvh overflow-x-hidden bg-[#101416] text-white lg:h-dvh lg:min-h-0 lg:overflow-hidden">
-      {/* Same background as the login page */}
+      {/* Background */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_5%_10%,rgba(248,201,86,0.20),transparent_35%),radial-gradient(ellipse_at_90%_40%,rgba(56,130,150,0.18),transparent_38%),radial-gradient(ellipse_at_65%_95%,rgba(248,201,86,0.12),transparent_35%),linear-gradient(135deg,#22221d_0%,#101416_48%,#171c1e_100%)]" />
 
       <div className="pointer-events-none absolute -left-24 top-20 h-72 w-72 rounded-full bg-amber-400/[0.08] blur-[100px]" />
 
       {/* Header */}
       <header className="relative z-20 mx-auto flex h-[76px] max-w-[1600px] items-center gap-3 px-5 sm:px-10 lg:px-12 xl:px-16">
-        <motion.div
-          whileHover={{ scale: 1.05, rotate: 4 }}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#ffe69a] via-[#f8c956] to-[#dca72e] text-black shadow-lg shadow-amber-400/20 sm:h-12 sm:w-12"
-        >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#ffe69a] via-[#f8c956] to-[#dca72e] text-black shadow-lg shadow-amber-400/20 sm:h-12 sm:w-12">
           <Store size={25} strokeWidth={2.5} />
-        </motion.div>
+        </div>
 
         <div>
           <h2 className="text-lg font-extrabold tracking-tight sm:text-2xl">
@@ -153,8 +150,7 @@ export default function Register() {
 
       {/* Main layout */}
       <div className="relative mx-auto grid max-w-[1600px] grid-cols-1 items-center gap-8 px-5 py-7 sm:px-10 lg:h-[calc(100dvh-76px)] lg:min-h-0 lg:grid-cols-[1.08fr_0.92fr] lg:gap-5 lg:px-10 lg:py-2 xl:gap-8 xl:px-14">
-
-        {/* LEFT: Brand, headline and features */}
+        {/* Left content */}
         <section className="relative z-10 flex min-w-0 flex-col justify-center py-3 lg:h-full lg:min-h-0">
           <motion.div
             initial={{ opacity: 0, x: -25 }}
@@ -217,7 +213,6 @@ export default function Register() {
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-300/10 bg-amber-300/10 text-[#f8c956]">
                   <Icon size={18} />
                 </div>
-
                 <span className="text-sm font-semibold text-slate-100">
                   {label}
                 </span>
@@ -227,14 +222,17 @@ export default function Register() {
 
           <footer className="mt-6 border-t border-white/10 pt-3 text-xs text-slate-400 lg:mt-5">
             <div className="flex flex-wrap justify-between gap-2">
-              <span>© {new Date().getFullYear()} Ganesh Mobile Shop</span>
+              <span>
+                © {new Date().getFullYear()} Ganesh Mobile Shop
+              </span>
               <span>Shop Smarter, Grow Faster.</span>
             </div>
           </footer>
         </section>
 
-        {/* RIGHT: Curved divider and animated phone */}
+        {/* Right content: fixed phone */}
         <section className="relative flex min-w-0 items-center justify-center py-5 lg:h-full lg:min-h-0 lg:overflow-visible">
+          {/* Static gold divider */}
           <svg
             aria-hidden="true"
             viewBox="0 0 160 800"
@@ -257,46 +255,22 @@ export default function Register() {
             />
           </svg>
 
-          <motion.div
-            initial={{ opacity: 0, x: 25, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-            className="relative z-10 flex w-full items-center justify-center lg:pl-7"
-          >
-            {/* Floating 3D phone */}
-            <motion.div
-              animate={{
-                y: [0, -6, 0, 5, 0],
-                rotateY: [-2, 2, -1, 2, -2],
-                rotateZ: [-0.4, 0.4, -0.2, 0.2, -0.4],
-              }}
-              transition={{
-                duration: 7,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
+          {/* Phone remains stationary */}
+          <div className="relative z-10 flex w-full items-center justify-center lg:pl-7">
+            <div
               style={{
                 transformPerspective: 1200,
                 transformStyle: "preserve-3d",
               }}
               className="relative w-[min(82vw,330px)] sm:w-[330px] lg:w-[285px] lg:scale-[0.84] xl:w-[320px] xl:scale-[0.9] 2xl:scale-100"
             >
-              <motion.div
-                animate={{
-                  opacity: [0.2, 0.4, 0.2],
-                  scale: [0.9, 1.05, 0.9],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                className="absolute inset-5 rounded-full bg-amber-400/20 blur-3xl"
-              />
+              {/* Static glow */}
+              <div className="pointer-events-none absolute inset-5 rounded-full bg-amber-400/20 blur-3xl" />
 
               {/* Phone body */}
               <div className="relative rounded-[43px] border-[5px] border-[#62615b] bg-gradient-to-br from-[#a9a79c] via-[#292e2e] to-[#090d0e] p-[5px] shadow-[0_30px_80px_rgba(0,0,0,0.48)]">
                 <div className="pointer-events-none absolute inset-0 rounded-[38px] border border-white/20" />
+
                 <div className="absolute -right-[8px] top-24 h-12 w-[4px] rounded-r-md bg-[#77756b]" />
                 <div className="absolute -left-[8px] top-20 h-9 w-[4px] rounded-l-md bg-[#77756b]" />
 
@@ -307,63 +281,53 @@ export default function Register() {
                       <span className="h-1.5 w-1.5 rounded-full bg-[#f8c956]" />
                       Ganesh Shop
                     </span>
+
                     <span className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black ring-1 ring-white/10" />
+
                     <span>9:41</span>
                   </div>
 
                   <div className="relative bg-gradient-to-b from-[#172123] via-[#11191b] to-[#101416] px-5 pb-4 pt-3">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-[radial-gradient(ellipse_at_50%_0%,rgba(248,201,86,0.16),transparent_70%)]" />
 
-                    {/* Brand icon */}
+                    {/* Static account icon */}
                     <div className="relative flex h-[75px] flex-col items-center justify-center">
-                      <motion.div
-                        animate={{
-                          y: [0, -4, 0],
-                          rotateY: [-5, 5, -5],
-                        }}
-                        transition={{
-                          duration: 4,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                        className="flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-amber-300/25 bg-gradient-to-br from-[#323b39] to-[#151b1c] text-[#f8c956] shadow-xl"
-                      >
+                      <div className="flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-amber-300/25 bg-gradient-to-br from-[#323b39] to-[#151b1c] text-[#f8c956] shadow-xl">
                         <UserRound size={27} />
-                      </motion.div>
+                      </div>
                     </div>
 
-                    {/* Transparent registration form */}
                     <div className="relative mt-1">
                       <h2 className="text-center text-2xl font-extrabold tracking-tight text-white">
                         Create Account
                       </h2>
+
                       <p className="mt-1 text-center text-[11px] text-slate-400">
                         Create your shop admin account
                       </p>
 
                       {error && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
+                        <div
                           role="alert"
-                          className="mt-3 rounded-lg border border-red-400/25 bg-red-400/10 px-3 py-2 text-[10px] leading-4 text-red-200"
+                          className="mt-3 break-words rounded-lg border border-red-400/25 bg-red-400/10 px-3 py-2 text-[10px] leading-4 text-red-200"
                         >
                           {error}
-                        </motion.div>
+                        </div>
                       )}
 
                       {success && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
+                        <div
                           role="status"
-                          className="mt-3 rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-3 py-2 text-[10px] leading-4 text-emerald-200"
+                          className="mt-3 break-words rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-3 py-2 text-[10px] leading-4 text-emerald-200"
                         >
                           {success}
-                        </motion.div>
+                        </div>
                       )}
 
-                      <form onSubmit={handleSubmit} className="mt-3 space-y-2.5">
+                      <form
+                        onSubmit={handleSubmit}
+                        className="mt-3 space-y-2.5"
+                      >
                         {/* Full name */}
                         <div>
                           <label
@@ -372,8 +336,12 @@ export default function Register() {
                           >
                             Full Name
                           </label>
+
                           <div className="group flex h-9 items-center gap-2 rounded-xl border border-white/15 bg-black/20 px-3 transition focus-within:border-[#f8c956]/80 focus-within:ring-2 focus-within:ring-[#f8c956]/10">
-                            <UserRound size={14} className="shrink-0 text-slate-400 group-focus-within:text-[#f8c956]" />
+                            <UserRound
+                              size={14}
+                              className="shrink-0 text-slate-400 group-focus-within:text-[#f8c956]"
+                            />
                             <input
                               id="name"
                               name="name"
@@ -383,7 +351,7 @@ export default function Register() {
                               value={formData.name}
                               onChange={handleChange}
                               required
-                              className="h-full min-w-0 w-full bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
+                              className="h-full w-full min-w-0 bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
                             />
                           </div>
                         </div>
@@ -396,8 +364,12 @@ export default function Register() {
                           >
                             Email
                           </label>
+
                           <div className="group flex h-9 items-center gap-2 rounded-xl border border-white/15 bg-black/20 px-3 transition focus-within:border-[#f8c956]/80 focus-within:ring-2 focus-within:ring-[#f8c956]/10">
-                            <Mail size={14} className="shrink-0 text-slate-400 group-focus-within:text-[#f8c956]" />
+                            <Mail
+                              size={14}
+                              className="shrink-0 text-slate-400 group-focus-within:text-[#f8c956]"
+                            />
                             <input
                               id="email"
                               name="email"
@@ -407,7 +379,7 @@ export default function Register() {
                               value={formData.email}
                               onChange={handleChange}
                               required
-                              className="h-full min-w-0 w-full bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
+                              className="h-full w-full min-w-0 bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
                             />
                           </div>
                         </div>
@@ -420,8 +392,12 @@ export default function Register() {
                           >
                             Password
                           </label>
+
                           <div className="group flex h-9 items-center gap-2 rounded-xl border border-white/15 bg-black/20 px-3 transition focus-within:border-[#f8c956]/80 focus-within:ring-2 focus-within:ring-[#f8c956]/10">
-                            <LockKeyhole size={14} className="shrink-0 text-slate-400 group-focus-within:text-[#f8c956]" />
+                            <LockKeyhole
+                              size={14}
+                              className="shrink-0 text-slate-400 group-focus-within:text-[#f8c956]"
+                            />
                             <input
                               id="password"
                               name="password"
@@ -432,15 +408,23 @@ export default function Register() {
                               onChange={handleChange}
                               minLength={6}
                               required
-                              className="h-full min-w-0 w-full bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
+                              className="h-full w-full min-w-0 bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
                             />
                             <button
                               type="button"
-                              onClick={() => setShowPassword((previous) => !previous)}
-                              aria-label={showPassword ? "Hide password" : "Show password"}
+                              onClick={() =>
+                                setShowPassword((previous) => !previous)
+                              }
+                              aria-label={
+                                showPassword ? "Hide password" : "Show password"
+                              }
                               className="shrink-0 text-slate-400 transition hover:text-[#f8c956]"
                             >
-                              {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                              {showPassword ? (
+                                <EyeOff size={14} />
+                              ) : (
+                                <Eye size={14} />
+                              )}
                             </button>
                           </div>
                         </div>
@@ -453,8 +437,12 @@ export default function Register() {
                           >
                             Confirm Password
                           </label>
+
                           <div className="group flex h-9 items-center gap-2 rounded-xl border border-white/15 bg-black/20 px-3 transition focus-within:border-[#f8c956]/80 focus-within:ring-2 focus-within:ring-[#f8c956]/10">
-                            <LockKeyhole size={14} className="shrink-0 text-slate-400 group-focus-within:text-[#f8c956]" />
+                            <LockKeyhole
+                              size={14}
+                              className="shrink-0 text-slate-400 group-focus-within:text-[#f8c956]"
+                            />
                             <input
                               id="confirmPassword"
                               name="confirmPassword"
@@ -464,11 +452,13 @@ export default function Register() {
                               value={formData.confirmPassword}
                               onChange={handleChange}
                               required
-                              className="h-full min-w-0 w-full bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
+                              className="h-full w-full min-w-0 bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
                             />
                             <button
                               type="button"
-                              onClick={() => setShowConfirmPassword((previous) => !previous)}
+                              onClick={() =>
+                                setShowConfirmPassword((previous) => !previous)
+                              }
                               aria-label={
                                 showConfirmPassword
                                   ? "Hide confirm password"
@@ -476,12 +466,16 @@ export default function Register() {
                               }
                               className="shrink-0 text-slate-400 transition hover:text-[#f8c956]"
                             >
-                              {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                              {showConfirmPassword ? (
+                                <EyeOff size={14} />
+                              ) : (
+                                <Eye size={14} />
+                              )}
                             </button>
                           </div>
                         </div>
 
-                        {/* Create account button */}
+                        {/* Create account */}
                         <motion.button
                           type="submit"
                           disabled={loading}
@@ -508,6 +502,7 @@ export default function Register() {
                         <p className="text-[10px] text-slate-400">
                           Already have an account?
                         </p>
+
                         <Link
                           to="/login"
                           className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-[#f8c956] transition hover:text-[#ffe69a]"
@@ -525,7 +520,7 @@ export default function Register() {
                     </div>
                   </div>
 
-                  {/* Phone navigation bar */}
+                  {/* Phone navigation */}
                   <div className="flex h-7 items-center justify-center gap-12 bg-[#080b0c]">
                     <span className="h-2.5 w-2.5 rotate-45 border-b-2 border-l-2 border-slate-300" />
                     <span className="h-2.5 w-2.5 rounded-full border border-slate-300" />
@@ -534,20 +529,10 @@ export default function Register() {
                 </div>
               </div>
 
-              <motion.div
-                animate={{
-                  opacity: [0.2, 0.4, 0.2],
-                  scaleX: [0.85, 1.08, 0.85],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                className="absolute -bottom-5 left-8 right-8 h-7 rounded-full bg-amber-400/20 blur-xl"
-              />
-            </motion.div>
-          </motion.div>
+              {/* Static bottom glow */}
+              <div className="pointer-events-none absolute -bottom-5 left-8 right-8 h-7 rounded-full bg-amber-400/20 blur-xl" />
+            </div>
+          </div>
         </section>
       </div>
     </main>

@@ -1,3 +1,4 @@
+
 import React, {
   useCallback,
   useEffect,
@@ -23,8 +24,10 @@ import Sidebar from "../../components/layout/Sidebar";
 import api from "../../services/api";
 
 // ==================================================
-// HELPERS
+// THEME AND HELPERS
 // ==================================================
+
+const PAGE_BG = "#F4F0E6";
 
 const formatMoney = (amount) =>
   new Intl.NumberFormat("en-IN", {
@@ -73,23 +76,23 @@ const spring = {
 };
 
 const pageVariants = {
-  hidden: { opacity: 0, y: 18 },
+  hidden: { opacity: 0, y: 15 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.4,
-      staggerChildren: 0.07,
+      duration: 0.35,
+      staggerChildren: 0.06,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 15 },
+  hidden: { opacity: 0, y: 12 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.35 },
+    transition: { duration: 0.3 },
   },
 };
 
@@ -101,34 +104,20 @@ function AnimatedButton({
   children,
   onClick,
   disabled = false,
-  variant = "gold",
   className = "",
   type = "button",
 }) {
-  const styles = {
-    gold: "bg-[#F4C64E] text-black hover:bg-[#E7B83B]",
-    dark: "bg-[#191919] text-white hover:bg-[#303030]",
-    outline:
-      "border border-gray-200 bg-white text-gray-700 hover:border-[#D4AF37] hover:bg-amber-50",
-  };
-
   return (
     <motion.button
       type={type}
       onClick={onClick}
       disabled={disabled}
       whileHover={
-        disabled
-          ? undefined
-          : {
-              y: -2,
-              scale: 1.02,
-              boxShadow: "0 8px 20px rgba(212,175,55,0.18)",
-            }
+        disabled ? undefined : { y: -2, scale: 1.02 }
       }
       whileTap={disabled ? undefined : { scale: 0.96 }}
       transition={spring}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${styles[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-[#F4C64E] px-4 py-2.5 text-sm font-semibold text-black shadow-sm transition-colors hover:bg-[#E7B83B] disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       {children}
     </motion.button>
@@ -136,7 +125,7 @@ function AnimatedButton({
 }
 
 // ==================================================
-// ANIMATED STAT CARD
+// STAT CARD
 // ==================================================
 
 function StatCard({
@@ -151,39 +140,36 @@ function StatCard({
     <motion.div
       variants={itemVariants}
       whileHover={{
-        y: -5,
-        rotateX: 2,
-        rotateY: -2,
-        boxShadow: "0 16px 32px rgba(15,23,42,0.08)",
+        y: -4,
+        boxShadow: "0 12px 25px rgba(15,23,42,0.07)",
       }}
       transition={spring}
-      style={{ transformStyle: "preserve-3d" }}
-      className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+      className="rounded-2xl border border-[#E6D9BD] bg-[#FFFEFA] p-5 shadow-sm"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-500">
+          <p className="text-sm font-medium text-[#746D5E]">
             {title}
           </p>
 
           <motion.p
             key={String(value)}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mt-3 break-words font-extrabold tracking-tight ${
+            className={`mt-3 break-words font-extrabold tracking-tight text-[#171914] ${
               compact ? "text-xl sm:text-2xl" : "text-3xl"
             }`}
           >
             {value}
           </motion.p>
 
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-[#746D5E]">
             {subtitle}
           </p>
         </div>
 
         <motion.div
-          whileHover={{ rotate: 12, scale: 1.12 }}
+          whileHover={{ rotate: 8, scale: 1.08 }}
           transition={spring}
           className={`rounded-xl p-3 ${iconClass}`}
         >
@@ -217,7 +203,7 @@ function StatusBadge({ status }) {
   return (
     <motion.span
       layout
-      initial={{ opacity: 0, scale: 0.85 }}
+      initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={spring}
       className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${styles}`}
@@ -234,10 +220,10 @@ function StatusBadge({ status }) {
 
 function DetailRow({ label, value }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-gray-100 pb-3 text-sm last:border-0">
-      <span className="text-gray-500">{label}</span>
+    <div className="flex items-start justify-between gap-4 border-b border-[#EEE5D2] pb-3 text-sm last:border-0">
+      <span className="text-[#746D5E]">{label}</span>
 
-      <span className="max-w-[65%] break-words text-right font-medium text-gray-800">
+      <span className="max-w-[65%] break-words text-right font-medium text-[#171914]">
         {value}
       </span>
     </div>
@@ -254,9 +240,9 @@ function AlertMessage({ type = "error", message, onClose }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
       className={`mb-5 flex items-start gap-3 rounded-xl border p-4 text-sm ${
         isError
           ? "border-red-200 bg-red-50 text-red-700"
@@ -267,15 +253,13 @@ function AlertMessage({ type = "error", message, onClose }) {
 
       <span className="flex-1">{message}</span>
 
-      <motion.button
+      <button
         type="button"
-        whileHover={{ rotate: 90 }}
-        whileTap={{ scale: 0.9 }}
         onClick={onClose}
         aria-label="Dismiss message"
       >
         <X size={17} />
-      </motion.button>
+      </button>
     </motion.div>
   );
 }
@@ -296,9 +280,7 @@ function Payments() {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [processingId, setProcessingId] = useState("");
 
-  // ------------------------------------------------
-  // Load payments
-  // ------------------------------------------------
+  // LOAD PAYMENTS
 
   const loadPayments = useCallback(async () => {
     setLoading(true);
@@ -306,7 +288,6 @@ function Payments() {
 
     try {
       const response = await api.get("/payments");
-
       setPayments(response.data.payments || []);
     } catch (err) {
       setError(
@@ -322,9 +303,7 @@ function Payments() {
     loadPayments();
   }, [loadPayments]);
 
-  // ------------------------------------------------
-  // Search and status filter
-  // ------------------------------------------------
+  // SEARCH AND FILTER
 
   const filteredPayments = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -352,9 +331,7 @@ function Payments() {
     });
   }, [payments, search, statusFilter]);
 
-  // ------------------------------------------------
-  // Dashboard statistics
-  // ------------------------------------------------
+  // STATISTICS
 
   const stats = useMemo(
     () => ({
@@ -383,9 +360,7 @@ function Payments() {
     [payments]
   );
 
-  // ------------------------------------------------
-  // View payment details
-  // ------------------------------------------------
+  // VIEW PAYMENT
 
   const handleViewPayment = async (payment) => {
     setError("");
@@ -404,9 +379,7 @@ function Payments() {
     }
   };
 
-  // ------------------------------------------------
-  // Complete payment
-  // ------------------------------------------------
+  // COMPLETE PAYMENT
 
   const handleCompletePayment = async (payment) => {
     if (
@@ -443,9 +416,7 @@ function Payments() {
           `/payments/${payment._id}`
         );
 
-        setSelectedPayment(
-          detailResponse.data.payment
-        );
+        setSelectedPayment(detailResponse.data.payment);
       }
     } catch (err) {
       setError(
@@ -457,12 +428,13 @@ function Payments() {
     }
   };
 
-  // ------------------------------------------------
-  // Page UI
-  // ------------------------------------------------
+  // PAGE UI
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-[#191919]">
+    <div
+      className="min-h-screen text-[#171914]"
+      style={{ backgroundColor: PAGE_BG }}
+    >
       <Sidebar />
 
       <main className="min-h-screen p-4 sm:p-6 lg:ml-[250px] lg:p-8">
@@ -472,35 +444,18 @@ function Payments() {
           animate="visible"
           className="mx-auto max-w-[1600px]"
         >
-          {/* HEADER */}
+          {/* SIMPLE PAGE HEADING — NO HEADER BOX */}
 
           <motion.header
             variants={itemVariants}
-            className="relative mb-7 flex flex-col justify-between gap-4 overflow-hidden rounded-2xl border border-amber-100 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:p-7"
+            className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
           >
-            <motion.div
-              aria-hidden="true"
-              animate={{
-                x: [0, 15, 0],
-                y: [0, -8, 0],
-              }}
-              transition={{
-                duration: 7,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full bg-amber-100/70 blur-3xl"
-            />
-
-            <div className="relative">
-              
-
-              <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight text-[#171914] sm:text-3xl">
                 Payments
-                
               </h1>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-[#746D5E] sm:text-base">
                 Manage payment transactions and verify received payments.
               </p>
             </div>
@@ -508,7 +463,7 @@ function Payments() {
             <AnimatedButton
               onClick={loadPayments}
               disabled={loading}
-              className="relative shrink-0"
+              className="shrink-0 self-start sm:self-auto"
             >
               <RefreshCw
                 size={17}
@@ -593,21 +548,18 @@ function Payments() {
           <motion.section
             variants={itemVariants}
             whileHover={{
-              boxShadow:
-                "0 18px 42px rgba(15,23,42,0.06)",
+              boxShadow: "0 15px 35px rgba(15,23,42,0.05)",
             }}
-            transition={{ duration: 0.35 }}
-            className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden rounded-2xl border border-[#E6D9BD] bg-[#FFFEFA] shadow-sm"
           >
-            {/* Table header and filters */}
-
-            <div className="flex flex-col gap-4 border-b border-gray-100 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-4 border-b border-[#EEE5D2] p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="text-lg font-bold">
+                <h2 className="text-lg font-bold text-[#171914]">
                   Payment Transactions
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-[#746D5E]">
                   View and manage recorded payments.
                 </p>
               </div>
@@ -616,7 +568,7 @@ function Payments() {
                 <div className="relative min-w-0 sm:w-72">
                   <Search
                     size={18}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#948A76]"
                   />
 
                   <input
@@ -626,7 +578,7 @@ function Payments() {
                       setSearch(event.target.value)
                     }
                     placeholder="Search payments..."
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-[#D4AF37] focus:bg-white focus:ring-4 focus:ring-amber-100"
+                    className="w-full rounded-xl border border-[#E6D9BD] bg-[#F9F6EE] py-2.5 pl-10 pr-3 text-sm text-[#171914] outline-none transition focus:border-[#D4AF37] focus:bg-white focus:ring-4 focus:ring-amber-100"
                   />
                 </div>
 
@@ -635,7 +587,7 @@ function Payments() {
                   onChange={(event) =>
                     setStatusFilter(event.target.value)
                   }
-                  className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-[#D4AF37] focus:ring-4 focus:ring-amber-100"
+                  className="rounded-xl border border-[#E6D9BD] bg-[#FFFEFA] px-3 py-2.5 text-sm text-[#171914] outline-none transition focus:border-[#D4AF37] focus:ring-4 focus:ring-amber-100"
                 >
                   <option value="ALL">All Status</option>
                   <option value="PAID">Completed</option>
@@ -646,10 +598,8 @@ function Payments() {
               </div>
             </div>
 
-            {/* Table content */}
-
             {loading ? (
-              <div className="flex min-h-64 items-center justify-center gap-3 text-sm text-gray-500">
+              <div className="flex min-h-64 items-center justify-center gap-3 text-sm text-[#746D5E]">
                 <RefreshCw
                   size={20}
                   className="animate-spin"
@@ -662,25 +612,18 @@ function Payments() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex min-h-64 flex-col items-center justify-center px-5 text-center"
               >
-                <motion.div
-                  animate={{ y: [0, -6, 0] }}
-                  transition={{
-                    duration: 2.5,
-                    repeat: Infinity,
-                  }}
-                  className="mb-3 rounded-2xl bg-gray-100 p-4"
-                >
+                <div className="mb-3 rounded-2xl bg-[#F4F0E6] p-4">
                   <CreditCard
                     size={30}
-                    className="text-gray-400"
+                    className="text-[#948A76]"
                   />
-                </motion.div>
+                </div>
 
-                <h3 className="font-semibold">
+                <h3 className="font-semibold text-[#171914]">
                   No payments found
                 </h3>
 
-                <p className="mt-1 max-w-sm text-sm text-gray-500">
+                <p className="mt-1 max-w-sm text-sm text-[#746D5E]">
                   Payments will appear here when sales create payment
                   records. Try changing your search or status filter.
                 </p>
@@ -689,7 +632,7 @@ function Payments() {
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[950px] text-left text-sm">
-                    <thead className="bg-[#FAFAFA] text-xs uppercase tracking-wide text-gray-500">
+                    <thead className="bg-[#F5F0E5] text-xs uppercase tracking-wide text-[#746D5E]">
                       <tr>
                         <th className="px-5 py-4 font-semibold">#</th>
                         <th className="px-5 py-4 font-semibold">
@@ -716,55 +659,46 @@ function Payments() {
                       </tr>
                     </thead>
 
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-[#EEE5D2]">
                       <AnimatePresence mode="popLayout">
                         {filteredPayments.map((payment, index) => (
                           <motion.tr
                             layout
                             key={payment._id}
-                            initial={{
-                              opacity: 0,
-                              x: 12,
-                            }}
-                            animate={{
-                              opacity: 1,
-                              x: 0,
-                            }}
-                            exit={{
-                              opacity: 0,
-                              x: -12,
-                            }}
+                            initial={{ opacity: 0, x: 10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -10 }}
                             transition={spring}
                             whileHover={{
-                              backgroundColor: "#FFFCF2",
+                              backgroundColor: "#FFF8E5",
                             }}
                           >
-                            <td className="px-5 py-4 text-gray-500">
+                            <td className="px-5 py-4 text-[#746D5E]">
                               {index + 1}
                             </td>
 
                             <td className="px-5 py-4">
-                              <span className="font-semibold text-gray-900">
+                              <span className="font-semibold text-[#171914]">
                                 {payment.sale?.invoiceNumber || "—"}
                               </span>
                             </td>
 
                             <td className="px-5 py-4">
-                              <p className="font-medium text-gray-800">
+                              <p className="font-medium text-[#171914]">
                                 {payment.customer?.name ||
                                   "Unknown customer"}
                               </p>
 
-                              <p className="mt-1 text-xs text-gray-500">
+                              <p className="mt-1 text-xs text-[#746D5E]">
                                 {payment.customer?.mobileNumber || "—"}
                               </p>
                             </td>
 
-                            <td className="px-5 py-4 font-semibold">
+                            <td className="px-5 py-4 font-semibold text-[#171914]">
                               {formatMoney(payment.amount)}
                             </td>
 
-                            <td className="px-5 py-4 text-gray-600">
+                            <td className="px-5 py-4 text-[#746D5E]">
                               {methodLabel(payment.paymentMethod)}
                             </td>
 
@@ -772,7 +706,7 @@ function Payments() {
                               <StatusBadge status={payment.status} />
                             </td>
 
-                            <td className="whitespace-nowrap px-5 py-4 text-gray-600">
+                            <td className="whitespace-nowrap px-5 py-4 text-[#746D5E]">
                               {formatDate(payment.createdAt)}
                             </td>
 
@@ -780,17 +714,14 @@ function Payments() {
                               <div className="flex items-center justify-end gap-2">
                                 <motion.button
                                   type="button"
-                                  whileHover={{
-                                    scale: 1.08,
-                                    y: -1,
-                                  }}
-                                  whileTap={{ scale: 0.92 }}
+                                  whileHover={{ scale: 1.06 }}
+                                  whileTap={{ scale: 0.94 }}
                                   onClick={() =>
                                     handleViewPayment(payment)
                                   }
                                   title="View payment"
                                   aria-label="View payment"
-                                  className="rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:border-[#D4AF37] hover:bg-[#FFF8E1] hover:text-black"
+                                  className="rounded-lg border border-[#E6D9BD] bg-[#FFFEFA] p-2 text-[#746D5E] transition hover:border-[#D4AF37] hover:bg-[#FFF6D9] hover:text-black"
                                 >
                                   <Eye size={16} />
                                 </motion.button>
@@ -798,11 +729,8 @@ function Payments() {
                                 {payment.status === "PENDING" && (
                                   <motion.button
                                     type="button"
-                                    whileHover={{
-                                      scale: 1.08,
-                                      y: -1,
-                                    }}
-                                    whileTap={{ scale: 0.92 }}
+                                    whileHover={{ scale: 1.06 }}
+                                    whileTap={{ scale: 0.94 }}
                                     onClick={() =>
                                       handleCompletePayment(payment)
                                     }
@@ -830,7 +758,7 @@ function Payments() {
                   </table>
                 </div>
 
-                <div className="flex flex-col gap-2 border-t border-gray-100 px-5 py-4 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-2 border-t border-[#EEE5D2] px-5 py-4 text-sm text-[#746D5E] sm:flex-row sm:items-center sm:justify-between">
                   <span>
                     Showing {filteredPayments.length} of{" "}
                     {payments.length} payments
@@ -865,15 +793,13 @@ function Payments() {
             <motion.div
               initial={{
                 opacity: 0,
-                y: 24,
-                scale: 0.96,
-                rotateX: -3,
+                y: 20,
+                scale: 0.97,
               }}
               animate={{
                 opacity: 1,
                 y: 0,
                 scale: 1,
-                rotateX: 0,
               }}
               exit={{
                 opacity: 0,
@@ -881,50 +807,44 @@ function Payments() {
                 scale: 0.97,
               }}
               transition={spring}
-              className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+              className="w-full max-w-lg overflow-hidden rounded-2xl border border-[#E6D9BD] bg-[#FFFEFA] shadow-2xl"
             >
-              <div className="flex items-center justify-between border-b border-gray-100 p-5">
+              <div className="flex items-center justify-between border-b border-[#EEE5D2] p-5">
                 <div>
-                  <h2 className="text-lg font-bold">
+                  <h2 className="text-lg font-bold text-[#171914]">
                     Payment Details
                   </h2>
 
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-[#746D5E]">
                     {selectedPayment.sale?.invoiceNumber ||
                       "Invoice unavailable"}
                   </p>
                 </div>
 
-                <motion.button
+                <button
                   type="button"
-                  whileHover={{ rotate: 90, scale: 1.05 }}
-                  whileTap={{ scale: 0.9 }}
                   onClick={() => setSelectedPayment(null)}
-                  className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+                  className="rounded-lg p-2 text-[#746D5E] transition hover:bg-[#F4F0E6]"
                   aria-label="Close details"
                 >
                   <X size={20} />
-                </motion.button>
+                </button>
               </div>
 
               <div className="space-y-4 p-5">
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 p-4"
-                >
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-[#E6D9BD] bg-[#F5F0E5] p-4">
                   <div>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-[#746D5E]">
                       Payment amount
                     </p>
 
-                    <p className="mt-1 text-2xl font-extrabold">
+                    <p className="mt-1 text-2xl font-extrabold text-[#171914]">
                       {formatMoney(selectedPayment.amount)}
                     </p>
                   </div>
 
                   <StatusBadge status={selectedPayment.status} />
-                </motion.div>
+                </div>
 
                 <DetailRow
                   label="Customer"

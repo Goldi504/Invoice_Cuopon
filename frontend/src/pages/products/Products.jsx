@@ -426,8 +426,7 @@ function Products() {
 
   // PART 2 CONTINUES WITH THE PAGE UI
     return (
-    <div className="min-h-screen bg-[#F4F0E6] p-4 sm:p-6 lg:p-8">
-      {/* HEADER */}
+<div className="min-h-screen w-full bg-[#F4F0E6] p-4 sm:p-6 lg:p-8">      {/* HEADER */}
       <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#E8D39A] bg-[#FFF5D9] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#805A08]">

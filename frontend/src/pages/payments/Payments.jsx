@@ -553,8 +553,7 @@ function Payments() {
             transition={{ duration: 0.3 }}
             className="overflow-hidden rounded-2xl border border-[#E6D9BD] bg-[#FFFEFA] shadow-sm"
           >
-            <div className="flex flex-col gap-4 border-b border-[#EEE5D2] p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
-              <div>
+<div className="min-h-screen w-full bg-[#F4F0E6] p-4 sm:p-6 lg:p-8">              <div>
                 <h2 className="text-lg font-bold text-[#171914]">
                   Payment Transactions
                 </h2>

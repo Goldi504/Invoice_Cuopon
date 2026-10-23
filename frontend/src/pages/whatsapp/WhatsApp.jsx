@@ -1,808 +1,3 @@
-// import { useCallback, useEffect, useMemo, useState } from "react";
-// import { AnimatePresence, motion } from "framer-motion";
-// import {
-//   MessageCircle,
-//   Search,
-//   Send,
-//   Smartphone,
-//   FileText,
-//   UserRound,
-//   CheckCircle2,
-//   AlertCircle,
-//   RefreshCw,
-//   ExternalLink,
-//   ChevronDown,
-//   Paperclip,
-//   Store,
-// } from "lucide-react";
-
-// import Sidebar from "../../components/layout/Sidebar";
-// import api from "../../services/api";
-
-// const DEFAULT_MESSAGE = "Thank you for shopping with us!";
-
-// const formatMoney = (amount) =>
-//   new Intl.NumberFormat("en-IN", {
-//     style: "currency",
-//     currency: "INR",
-//     maximumFractionDigits: 2,
-//   }).format(Number(amount) || 0);
-
-// const getList = (data, keys) => {
-//   if (Array.isArray(data)) return data;
-
-//   for (const key of keys) {
-//     if (Array.isArray(data?.[key])) return data[key];
-//   }
-
-//   return [];
-// };
-
-// const getCustomerName = (customer) =>
-//   customer?.name ||
-//   customer?.fullName ||
-//   customer?.customerName ||
-//   "Customer";
-
-// const getCustomerPhone = (customer) =>
-//   customer?.mobileNumber ||
-//   customer?.phone ||
-//   customer?.phoneNumber ||
-//   customer?.mobile ||
-//   "";
-
-// const getCustomerId = (customer) =>
-//   customer?._id || customer?.id || "";
-
-// const getInvoiceNumber = (invoice) =>
-//   invoice?.invoiceNumber ||
-//   invoice?.invoiceNo ||
-//   invoice?.sale?.invoiceNumber ||
-//   invoice?.number ||
-//   "";
-
-// const getInvoiceId = (invoice) =>
-//   invoice?._id || invoice?.id || "";
-
-// const getInvoiceTotal = (invoice) =>
-//   invoice?.totalAmount ??
-//   invoice?.grandTotal ??
-//   invoice?.total ??
-//   invoice?.sale?.totalAmount ??
-//   invoice?.sale?.grandTotal ??
-//   invoice?.amount ??
-//   0;
-
-// const getInvoiceCustomerId = (invoice) => {
-//   const customer =
-//     invoice?.customer ||
-//     invoice?.sale?.customer ||
-//     invoice?.sale?.customerId;
-
-//   return typeof customer === "object"
-//     ? getCustomerId(customer)
-//     : customer || "";
-// };
-
-// function StatCard({ title, value, icon: Icon, tone, index }) {
-//   return (
-//     <motion.div
-//       initial={{ opacity: 0, y: 16 }}
-//       animate={{ opacity: 1, y: 0 }}
-//       transition={{ delay: index * 0.08, duration: 0.35 }}
-//       whileHover={{ y: -3 }}
-//       className="min-w-0 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
-//     >
-//       <div className="flex items-center justify-between gap-3">
-//         <p className="text-sm font-medium text-gray-500">{title}</p>
-//         <div className={`rounded-xl p-2.5 ${tone}`}>
-//           <Icon size={20} />
-//         </div>
-//       </div>
-
-//       <p className="mt-4 text-2xl font-bold text-gray-900">
-//         {value}
-//       </p>
-//     </motion.div>
-//   );
-// }
-
-// function WhatsApp() {
-//   const [customers, setCustomers] = useState([]);
-//   const [invoices, setInvoices] = useState([]);
-
-//   const [customerId, setCustomerId] = useState("");
-//   const [invoiceId, setInvoiceId] = useState("");
-//   const [message, setMessage] = useState(DEFAULT_MESSAGE);
-//   const [search, setSearch] = useState("");
-
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
-//   const [notice, setNotice] = useState("");
-
-//   const loadData = useCallback(async () => {
-//     setLoading(true);
-//     setError("");
-//     setNotice("");
-
-//     try {
-//       const [customerResponse, invoiceResponse] =
-//         await Promise.all([
-//           api.get("/customers"),
-//           api.get("/invoices"),
-//         ]);
-
-//       const customerList = getList(customerResponse.data, [
-//         "customers",
-//         "data",
-//         "results",
-//       ]);
-
-//       const invoiceList = getList(invoiceResponse.data, [
-//         "invoices",
-//         "data",
-//         "results",
-//       ]);
-
-//       setCustomers(customerList);
-//       setInvoices(invoiceList);
-
-//       setCustomerId((current) =>
-//         customerList.some(
-//           (item) => getCustomerId(item) === current
-//         )
-//           ? current
-//           : getCustomerId(customerList[0]) || ""
-//       );
-
-//       setInvoiceId((current) =>
-//         invoiceList.some(
-//           (item) => getInvoiceId(item) === current
-//         )
-//           ? current
-//           : getInvoiceId(invoiceList[0]) || ""
-//       );
-//     } catch (err) {
-//       setError(
-//         err.response?.data?.message ||
-//           "Unable to load customers and invoices. Check the API routes and server."
-//       );
-//     } finally {
-//       setLoading(false);
-//     }
-//   }, []);
-
-//   useEffect(() => {
-//     loadData();
-//   }, [loadData]);
-
-//   const selectedCustomer = useMemo(
-//     () =>
-//       customers.find(
-//         (customer) => getCustomerId(customer) === customerId
-//       ) || null,
-//     [customers, customerId]
-//   );
-
-//   const filteredInvoices = useMemo(() => {
-//     const query = search.trim().toLowerCase();
-
-//     return invoices.filter((invoice) => {
-//       const matchesSearch =
-//         !query ||
-//         getInvoiceNumber(invoice).toLowerCase().includes(query);
-
-//       const linkedCustomerId = getInvoiceCustomerId(invoice);
-
-//       const matchesCustomer =
-//         !customerId ||
-//         !linkedCustomerId ||
-//         linkedCustomerId === customerId;
-
-//       return matchesSearch && matchesCustomer;
-//     });
-//   }, [invoices, search, customerId]);
-
-//   const selectedInvoice = useMemo(
-//     () =>
-//       invoices.find(
-//         (invoice) => getInvoiceId(invoice) === invoiceId
-//       ) || null,
-//     [invoices, invoiceId]
-//   );
-
-//   const previewText = useMemo(() => {
-//     const name = getCustomerName(selectedCustomer);
-//     const invoiceNumber = selectedInvoice
-//       ? getInvoiceNumber(selectedInvoice) || "Invoice"
-//       : "your invoice";
-
-//     const amount = selectedInvoice
-//       ? formatMoney(getInvoiceTotal(selectedInvoice))
-//       : "Select an invoice";
-
-//     return `Hello ${name},
-
-// Here is your invoice ${invoiceNumber}
-
-// Total Amount: ${amount}
-
-// ${message.trim() || DEFAULT_MESSAGE}
-
-// Ganesh Mobile Shop
-// Bhopal, Madhya Pradesh`;
-//   }, [selectedCustomer, selectedInvoice, message]);
-
-//   const handleCustomerChange = (value) => {
-//     setCustomerId(value);
-//     setError("");
-//     setNotice("");
-
-//     const firstMatchingInvoice = invoices.find((invoice) => {
-//       const linkedCustomerId = getInvoiceCustomerId(invoice);
-
-//       return (
-//         !linkedCustomerId ||
-//         linkedCustomerId === value
-//       );
-//     });
-
-//     setInvoiceId(
-//       firstMatchingInvoice
-//         ? getInvoiceId(firstMatchingInvoice)
-//         : ""
-//     );
-//   };
-
-//   const handleSend = () => {
-//     setError("");
-//     setNotice("");
-
-//     if (!selectedCustomer) {
-//       setError("Please select a customer first.");
-//       return;
-//     }
-
-//     if (!selectedInvoice) {
-//       setError("Please select an invoice first.");
-//       return;
-//     }
-
-//     const rawPhone = String(
-//       getCustomerPhone(selectedCustomer)
-//     );
-
-//     const phone = rawPhone.replace(/\D/g, "");
-
-//     if (!phone) {
-//       setError("This customer does not have a phone number.");
-//       return;
-//     }
-
-//     const internationalPhone =
-//       phone.length === 10 ? `91${phone}` : phone;
-
-//     if (internationalPhone.length < 11) {
-//       setError("Please check the customer's phone number.");
-//       return;
-//     }
-
-//     const url = `https://wa.me/${internationalPhone}?text=${encodeURIComponent(
-//       previewText
-//     )}`;
-
-//     window.open(url, "_blank", "noopener,noreferrer");
-
-//     setNotice(
-//       "WhatsApp opened with your prefilled message. Review it and press Send in WhatsApp."
-//     );
-//   };
-
-//   return (
-//     <div className="min-h-screen w-full bg-[#f7f7f8] text-gray-900">
-//       {/* Keep the existing sidebar unchanged. */}
-//       <Sidebar />
-
-//       {/* Page-specific layout correction */}
-//       <main className="min-h-screen min-w-0 w-full md:ml-[272px] md:w-[calc(100%-272px)]">
-//         <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">
-
-//           {/* Page heading */}
-//           <motion.div
-//             initial={{ opacity: 0, y: 15 }}
-//             animate={{ opacity: 1, y: 0 }}
-//             transition={{ duration: 0.4 }}
-//             className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-//           >
-//             <div className="min-w-0">
-//               <div className="mb-2 flex items-center gap-2">
-//                 <span className="rounded-xl bg-green-100 p-2.5 text-green-700">
-//                   <MessageCircle size={22} />
-//                 </span>
-//                 <span className="text-sm font-semibold text-green-700">
-//                   Customer communication
-//                 </span>
-//               </div>
-
-//               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-//                 Send Invoice via WhatsApp
-//               </h1>
-
-//               <p className="mt-2 text-sm text-gray-500">
-//                 Send invoice details directly to your customer.
-//               </p>
-//             </div>
-
-//             <motion.button
-//               whileHover={{ y: -2 }}
-//               whileTap={{ scale: 0.97 }}
-//               onClick={loadData}
-//               disabled={loading}
-//               className="inline-flex items-center justify-center gap-2 self-start rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm transition hover:border-[#d4af37] disabled:opacity-60 sm:self-auto"
-//             >
-//               <RefreshCw
-//                 size={16}
-//                 className={loading ? "animate-spin" : ""}
-//               />
-//               Refresh data
-//             </motion.button>
-//           </motion.div>
-
-//           {/* Alerts */}
-//           <AnimatePresence>
-//             {error && (
-//               <motion.div
-//                 key="error"
-//                 initial={{ opacity: 0, y: -8 }}
-//                 animate={{ opacity: 1, y: 0 }}
-//                 exit={{ opacity: 0 }}
-//                 className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-//               >
-//                 <AlertCircle size={19} className="mt-0.5 shrink-0" />
-//                 <p className="break-words">{error}</p>
-//               </motion.div>
-//             )}
-
-//             {notice && (
-//               <motion.div
-//                 key="notice"
-//                 initial={{ opacity: 0, y: -8 }}
-//                 animate={{ opacity: 1, y: 0 }}
-//                 exit={{ opacity: 0 }}
-//                 className="mb-5 flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800"
-//               >
-//                 <CheckCircle2
-//                   size={19}
-//                   className="mt-0.5 shrink-0"
-//                 />
-//                 <p className="break-words">{notice}</p>
-//               </motion.div>
-//             )}
-//           </AnimatePresence>
-
-//           {/* Statistics */}
-//           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-//             <StatCard
-//               title="Total Customers"
-//               value={customers.length}
-//               icon={UserRound}
-//               tone="bg-blue-50 text-blue-700"
-//               index={0}
-//             />
-
-//             <StatCard
-//               title="Available Invoices"
-//               value={invoices.length}
-//               icon={FileText}
-//               tone="bg-amber-50 text-amber-700"
-//               index={1}
-//             />
-
-//             <StatCard
-//               title="Matching Invoices"
-//               value={filteredInvoices.length}
-//               icon={MessageCircle}
-//               tone="bg-green-50 text-green-700"
-//               index={2}
-//             />
-//           </div>
-
-//           {/* Form and preview */}
-//           <div className="grid min-w-0 grid-cols-1 items-start gap-6 2xl:grid-cols-2">
-
-//             {/* Left: invoice form */}
-//             <motion.section
-//               initial={{ opacity: 0, x: -12 }}
-//               animate={{ opacity: 1, x: 0 }}
-//               transition={{ duration: 0.4 }}
-//               className="min-w-0 w-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
-//             >
-//               <div className="border-b border-gray-100 p-5 sm:p-6">
-//                 <h2 className="text-lg font-bold">
-//                   Invoice details
-//                 </h2>
-//                 <p className="mt-1 text-sm text-gray-500">
-//                   Choose a customer and invoice to share.
-//                 </p>
-//               </div>
-
-//               <div className="space-y-6 p-5 sm:p-6">
-
-//                 {/* Customer */}
-//                 <div>
-//                   <label
-//                     htmlFor="whatsapp-customer"
-//                     className="mb-2 block text-sm font-semibold text-gray-700"
-//                   >
-//                     Customer
-//                   </label>
-
-//                   <div className="relative">
-//                     <UserRound
-//                       size={17}
-//                       className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-//                     />
-
-//                     <select
-//                       id="whatsapp-customer"
-//                       value={customerId}
-//                       onChange={(event) =>
-//                         handleCustomerChange(event.target.value)
-//                       }
-//                       disabled={loading || customers.length === 0}
-//                       className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3.5 pl-10 pr-10 text-sm outline-none transition focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 disabled:bg-gray-50"
-//                     >
-//                       <option value="">
-//                         {loading
-//                           ? "Loading customers..."
-//                           : "Select a customer"}
-//                       </option>
-
-//                       {customers.map((customer) => (
-//                         <option
-//                           key={getCustomerId(customer)}
-//                           value={getCustomerId(customer)}
-//                         >
-//                           {getCustomerName(customer)}
-//                           {getCustomerPhone(customer)
-//                             ? ` - ${getCustomerPhone(customer)}`
-//                             : ""}
-//                         </option>
-//                       ))}
-//                     </select>
-
-//                     <ChevronDown
-//                       size={16}
-//                       className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-//                     />
-//                   </div>
-
-//                   {selectedCustomer && (
-//                     <div className="mt-3 flex min-w-0 items-center gap-3 rounded-xl bg-gray-50 p-3">
-//                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f7e6b0] font-bold text-gray-800">
-//                         {getCustomerName(selectedCustomer)
-//                           .slice(0, 1)
-//                           .toUpperCase()}
-//                       </div>
-
-//                       <div className="min-w-0 flex-1">
-//                         <p className="truncate text-sm font-semibold">
-//                           {getCustomerName(selectedCustomer)}
-//                         </p>
-//                         <p className="mt-0.5 break-words text-xs text-gray-500">
-//                           {getCustomerPhone(selectedCustomer) ||
-//                             "No phone number available"}
-//                         </p>
-//                       </div>
-
-//                       <CheckCircle2
-//                         size={18}
-//                         className="shrink-0 text-green-600"
-//                       />
-//                     </div>
-//                   )}
-//                 </div>
-
-//                 {/* Invoice */}
-//                 <div>
-//                   <label
-//                     htmlFor="whatsapp-invoice-search"
-//                     className="mb-2 block text-sm font-semibold text-gray-700"
-//                   >
-//                     Invoice
-//                   </label>
-
-//                   <div className="relative mb-3">
-//                     <Search
-//                       size={17}
-//                       className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-//                     />
-
-//                     <input
-//                       id="whatsapp-invoice-search"
-//                       value={search}
-//                       onChange={(event) =>
-//                         setSearch(event.target.value)
-//                       }
-//                       placeholder="Search invoice number..."
-//                       className="w-full rounded-xl border border-gray-200 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10"
-//                     />
-//                   </div>
-
-//                   <div className="relative">
-//                     <FileText
-//                       size={17}
-//                       className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-//                     />
-
-//                     <select
-//                       value={invoiceId}
-//                       onChange={(event) => {
-//                         setInvoiceId(event.target.value);
-//                         setError("");
-//                         setNotice("");
-//                       }}
-//                       disabled={loading || filteredInvoices.length === 0}
-//                       className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3.5 pl-10 pr-10 text-sm outline-none transition focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 disabled:bg-gray-50"
-//                     >
-//                       <option value="">
-//                         {loading
-//                           ? "Loading invoices..."
-//                           : filteredInvoices.length
-//                             ? "Select an invoice"
-//                             : "No matching invoices"}
-//                       </option>
-
-//                       {filteredInvoices.map((invoice) => (
-//                         <option
-//                           key={getInvoiceId(invoice)}
-//                           value={getInvoiceId(invoice)}
-//                         >
-//                           {getInvoiceNumber(invoice) || "Invoice"} —{" "}
-//                           {formatMoney(getInvoiceTotal(invoice))}
-//                         </option>
-//                       ))}
-//                     </select>
-
-//                     <ChevronDown
-//                       size={16}
-//                       className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-//                     />
-//                   </div>
-
-//                   {selectedInvoice && (
-//                     <motion.div
-//                       initial={{ opacity: 0, y: 5 }}
-//                       animate={{ opacity: 1, y: 0 }}
-//                       className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#f1dfad] bg-[#fffaf0] p-4"
-//                     >
-//                       <div className="min-w-0">
-//                         <p className="text-xs font-medium text-gray-500">
-//                           Selected invoice
-//                         </p>
-//                         <p className="mt-1 break-words text-sm font-bold">
-//                           {getInvoiceNumber(selectedInvoice) || "Invoice"}
-//                         </p>
-//                       </div>
-
-//                       <div className="min-w-0 text-left sm:text-right">
-//                         <p className="text-xs text-gray-500">
-//                           Total amount
-//                         </p>
-//                         <p className="mt-1 break-words text-sm font-bold">
-//                           {formatMoney(getInvoiceTotal(selectedInvoice))}
-//                         </p>
-//                       </div>
-//                     </motion.div>
-//                   )}
-//                 </div>
-
-//                 {/* Message */}
-//                 <div>
-//                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-//                     <label
-//                       htmlFor="whatsapp-message"
-//                       className="text-sm font-semibold text-gray-700"
-//                     >
-//                       Message (Optional)
-//                     </label>
-
-//                     <button
-//                       type="button"
-//                       onClick={() => setMessage(DEFAULT_MESSAGE)}
-//                       className="text-xs font-semibold text-gray-500 transition hover:text-gray-900"
-//                     >
-//                       Reset message
-//                     </button>
-//                   </div>
-
-//                   <textarea
-//                     id="whatsapp-message"
-//                     value={message}
-//                     onChange={(event) =>
-//                       setMessage(event.target.value)
-//                     }
-//                     rows={4}
-//                     maxLength={500}
-//                     placeholder="Write a short message for your customer..."
-//                     className="w-full resize-y rounded-xl border border-gray-200 px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10"
-//                   />
-
-//                   <p className="mt-1 text-right text-xs text-gray-400">
-//                     {message.length}/500 characters
-//                   </p>
-//                 </div>
-
-//                 {/* Send button */}
-//                 <motion.button
-//                   type="button"
-//                   whileHover={{ scale: 1.01, y: -2 }}
-//                   whileTap={{ scale: 0.98 }}
-//                   onClick={handleSend}
-//                   disabled={loading}
-//                   className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#16a34a] px-5 py-4 text-sm font-bold text-white shadow-lg shadow-green-600/15 transition hover:bg-[#128c3e] disabled:cursor-not-allowed disabled:opacity-60"
-//                 >
-//                   <MessageCircle size={21} />
-//                   Send via WhatsApp
-//                   <ExternalLink size={16} />
-//                 </motion.button>
-
-//                 <p className="text-center text-xs leading-5 text-gray-400">
-//                   WhatsApp opens in a new tab. Review and send the
-//                   message from WhatsApp.
-//                 </p>
-//               </div>
-//             </motion.section>
-
-//             {/* Right: live preview */}
-//             <motion.section
-//               initial={{ opacity: 0, x: 12 }}
-//               animate={{ opacity: 1, x: 0 }}
-//               transition={{ duration: 0.4, delay: 0.05 }}
-//               className="min-w-0 w-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
-//             >
-//               <div className="flex items-center justify-between gap-3 border-b border-gray-100 p-5 sm:p-6">
-//                 <div className="min-w-0">
-//                   <h2 className="text-lg font-bold">
-//                     Message preview
-//                   </h2>
-//                   <p className="mt-1 text-sm text-gray-500">
-//                     Preview your message before sending.
-//                   </p>
-//                 </div>
-
-//                 <span className="shrink-0 rounded-xl bg-green-50 p-3 text-green-700">
-//                   <Smartphone size={21} />
-//                 </span>
-//               </div>
-
-//               <div className="p-4 sm:p-6">
-//                 <div className="mx-auto w-full max-w-[360px] overflow-hidden rounded-[28px] border-[5px] border-[#252525] bg-[#efe8dd] shadow-xl">
-
-//                   {/* Phone header */}
-//                   <div className="flex items-center gap-3 bg-[#075e54] px-3 py-4 text-white sm:px-4">
-//                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f5dfa2] text-gray-900">
-//                       <Store size={21} />
-//                     </div>
-
-//                     <div className="min-w-0 flex-1">
-//                       <p className="truncate text-sm font-bold">
-//                         Ganesh Mobile Shop
-//                       </p>
-//                       <p className="mt-0.5 text-xs text-white/75">
-//                         Business Account
-//                       </p>
-//                     </div>
-
-//                     <MessageCircle size={20} className="shrink-0" />
-//                   </div>
-
-//                   {/* Chat background */}
-//                   <div
-//                     className="min-h-[350px] p-3 sm:min-h-[420px] sm:p-4"
-//                     style={{
-//                       backgroundColor: "#efe8dd",
-//                       backgroundImage:
-//                         "radial-gradient(rgba(110,100,80,0.08) 1px, transparent 1px)",
-//                       backgroundSize: "17px 17px",
-//                     }}
-//                   >
-//                     <div className="mb-4 text-center">
-//                       <span className="rounded-lg bg-[#e2d9cb] px-3 py-1.5 text-[10px] font-medium text-gray-600">
-//                         TODAY
-//                       </span>
-//                     </div>
-
-//                     <AnimatePresence mode="wait">
-//                       <motion.div
-//                         key={`${customerId}-${invoiceId}-${message}`}
-//                         initial={{
-//                           opacity: 0,
-//                           y: 8,
-//                           scale: 0.98,
-//                         }}
-//                         animate={{
-//                           opacity: 1,
-//                           y: 0,
-//                           scale: 1,
-//                         }}
-//                         exit={{ opacity: 0, y: -4 }}
-//                         transition={{ duration: 0.2 }}
-//                         className="ml-auto max-w-[96%] rounded-2xl rounded-tr-sm bg-[#dcf8c6] p-3 shadow-sm sm:p-4"
-//                       >
-//                         <p className="mb-3 text-[11px] font-bold text-[#075e54]">
-//                           Ganesh Mobile Shop
-//                         </p>
-
-//                         <p className="whitespace-pre-wrap break-words text-[12px] leading-[1.75] text-gray-800 sm:text-[13px]">
-//                           {previewText}
-//                         </p>
-
-//                         <div className="mt-3 flex items-center justify-end gap-1.5">
-//                           <span className="text-[10px] text-gray-500">
-//                             {new Date().toLocaleTimeString("en-IN", {
-//                               hour: "2-digit",
-//                               minute: "2-digit",
-//                             })}
-//                           </span>
-//                           <CheckCircle2
-//                             size={13}
-//                             className="text-blue-500"
-//                           />
-//                         </div>
-//                       </motion.div>
-//                     </AnimatePresence>
-
-//                     <div className="mt-5 flex items-center justify-center gap-2 rounded-full bg-white/80 px-3 py-2 text-center text-[10px] text-gray-500 shadow-sm sm:text-[11px]">
-//                       <Paperclip size={13} className="shrink-0" />
-//                       Invoice details shown in message
-//                     </div>
-//                   </div>
-
-//                   {/* Chat input preview */}
-//                   <div className="flex items-center gap-2 bg-[#f7f7f7] p-2 sm:p-3">
-//                     <div className="min-w-0 flex-1 rounded-full bg-white px-3 py-3 text-xs text-gray-400 sm:px-4">
-//                       Type a message
-//                     </div>
-
-//                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#128c7e] text-white">
-//                       <Send size={16} />
-//                     </div>
-//                   </div>
-//                 </div>
-
-//                 <div className="mt-5 flex items-start gap-3 rounded-xl border border-green-100 bg-green-50 p-4">
-//                   <CheckCircle2
-//                     size={19}
-//                     className="mt-0.5 shrink-0 text-green-700"
-//                   />
-
-//                   <div className="min-w-0">
-//                     <p className="text-sm font-semibold text-green-900">
-//                       Live message preview
-//                     </p>
-//                     <p className="mt-1 text-xs leading-5 text-green-800/80">
-//                       Changing the customer, invoice, or message
-//                       automatically updates the preview.
-//                     </p>
-//                   </div>
-//                 </div>
-//               </div>
-//             </motion.section>
-//           </div>
-
-//           <p className="mt-6 text-center text-xs text-gray-400">
-//             Ganesh Mobile Shop · Shop Smarter, Grow Faster
-//           </p>
-//         </div>
-//       </main>
-//     </div>
-//   );
-// }
-
-// export default WhatsApp;
-
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -825,6 +20,13 @@ import Sidebar from "../../components/layout/Sidebar";
 import api from "../../services/api";
 
 const DEFAULT_MESSAGE = "Thank you for shopping with us!";
+
+const PAGE_BG = "#F4F0E6";
+const CARD_BG = "#FFFEFA";
+const BORDER_COLOR = "#E6D9BD";
+const TEXT_COLOR = "#171914";
+const MUTED_COLOR = "#746D5E";
+const GOLD_COLOR = "#E9B83F";
 
 const formatMoney = (amount) =>
   new Intl.NumberFormat("en-IN", {
@@ -940,11 +142,14 @@ function StatCard({ title, value, icon: Icon, tone, index }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, duration: 0.35 }}
-      whileHover={{ y: -3 }}
-      className="min-w-0 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5"
+      whileHover={{
+        y: -4,
+        boxShadow: "0 12px 24px rgba(184,134,11,0.10)",
+      }}
+      className="min-w-0 rounded-2xl border border-[#E6D9BD] bg-[#FFFEFA] p-4 shadow-sm transition-colors sm:p-5"
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-gray-500">
+        <p className="text-sm font-medium text-[#746D5E]">
           {title}
         </p>
 
@@ -953,7 +158,7 @@ function StatCard({ title, value, icon: Icon, tone, index }) {
         </div>
       </div>
 
-      <p className="mt-4 text-2xl font-bold text-gray-900">
+      <p className="mt-4 text-2xl font-bold text-[#171914]">
         {value}
       </p>
     </motion.div>
@@ -1051,16 +256,14 @@ function WhatsApp() {
     const query = search.trim().toLowerCase();
 
     return invoices.filter((invoice) => {
-      const invoiceNumber = getInvoiceNumber(invoice).toLowerCase();
+      const invoiceNumber =
+        getInvoiceNumber(invoice).toLowerCase();
 
       const matchesSearch =
         !query || invoiceNumber.includes(query);
 
       const linkedCustomerId = getInvoiceCustomerId(invoice);
 
-      // Show invoices belonging to the selected customer.
-      // If customerId is not populated in the response,
-      // keep the invoice available instead of hiding it.
       const matchesCustomer =
         !customerId ||
         !linkedCustomerId ||
@@ -1068,143 +271,132 @@ function WhatsApp() {
 
       return matchesSearch && matchesCustomer;
     });
-  }, [invoices, search, customerId]);
+  }, [invoices, search, customerId]);  // ================================================
+  // SELECT CUSTOMER
+  // ================================================
 
-  const handleCustomerChange = (nextCustomerId) => {
+  const handleCustomerChange = (event) => {
+    const nextCustomerId = event.target.value;
+
     setCustomerId(nextCustomerId);
+    setInvoiceId("");
     setSearch("");
-    setError("");
     setNotice("");
-
-    // Prefer an invoice linked to the selected customer.
-    const customerInvoices = invoices.filter((invoice) => {
-      const linkedCustomerId = getInvoiceCustomerId(invoice);
-
-      return (
-        linkedCustomerId &&
-        linkedCustomerId === String(nextCustomerId)
-      );
-    });
-
-    if (customerInvoices.length > 0) {
-      setInvoiceId(getInvoiceId(customerInvoices[0]));
-    } else {
-      // If customer IDs are not present in the response,
-      // retain the current invoice if possible.
-      setInvoiceId((current) =>
-        invoices.some(
-          (invoice) => getInvoiceId(invoice) === current
-        )
-          ? current
-          : getInvoiceId(invoices[0])
-      );
-    }
+    setError("");
   };
 
-  const previewText = useMemo(() => {
+  // ================================================
+  // SELECT INVOICE
+  // ================================================
+
+  const handleInvoiceChange = (event) => {
+    setInvoiceId(event.target.value);
+    setNotice("");
+    setError("");
+  };
+
+  // ================================================
+  // GENERATE INVOICE MESSAGE
+  // ================================================
+
+  const generatedMessage = useMemo(() => {
     if (!selectedInvoice) {
-      return "Select a customer and invoice to preview the message.";
+      return message.trim();
     }
 
-    const customer = getInvoiceCustomer(
+    const invoiceCustomer = getInvoiceCustomer(
       selectedInvoice,
       selectedCustomer
     );
 
+    const invoiceNumber =
+      getInvoiceNumber(selectedInvoice) || "N/A";
+
+    const invoiceDate =
+      getInvoiceDate(selectedInvoice) || "N/A";
+
+    const invoiceTotal = formatMoney(
+      getInvoiceTotal(selectedInvoice)
+    );
+
     const product = getProductDetails(selectedInvoice);
 
-    const customerName = getCustomerName(customer);
-
-    const customerPhone =
-      getCustomerPhone(customer) ||
-      getCustomerPhone(selectedCustomer);
-
     const productName =
-      product.productName ||
-      product.name ||
+      product?.productName ||
+      product?.model ||
+      selectedInvoice?.productName ||
+      selectedInvoice?.product?.model ||
+      selectedInvoice?.product?.name ||
       "";
 
-    const invoiceNumber = getInvoiceNumber(selectedInvoice);
-    const invoiceDate = getInvoiceDate(selectedInvoice);
+    const imei =
+      product?.imei ||
+      selectedInvoice?.imei ||
+      selectedInvoice?.serialNumber ||
+      "";
 
     const lines = [
-      `Hello ${customerName},`,
+      "Hello " +
+        getCustomerName(invoiceCustomer) +
+        ",",
       "",
       "Thank you for shopping with Ganesh Mobile Shop!",
       "",
-      "🧾 INVOICE DETAILS",
-      addMessageLine("Invoice No.", invoiceNumber),
+      "Here are your invoice details:",
+      "",
+      addMessageLine("Invoice Number", invoiceNumber),
       addMessageLine("Invoice Date", invoiceDate),
-      "",
-      "📱 PRODUCT DETAILS",
       addMessageLine("Product", productName),
-      addMessageLine("Brand", product.brand),
-      addMessageLine("Model", product.model),
-      addMessageLine("IMEI", product.imei),
-      addMessageLine("Second IMEI", product.secondImei),
-      addMessageLine("Serial Number", product.serialNumber),
-      "",
-      "💰 PAYMENT DETAILS",
-      selectedInvoice.price != null
-        ? addMessageLine(
-            "Price",
-            formatMoney(selectedInvoice.price)
-          )
-        : "",
-      selectedInvoice.discount != null
-        ? addMessageLine(
-            "Discount",
-            formatMoney(selectedInvoice.discount)
-          )
-        : "",
-      selectedInvoice.gst != null
-        ? addMessageLine(
-            "GST",
-            `${selectedInvoice.gst}%`
-          )
-        : "",
-      addMessageLine(
-        "Total Amount",
-        formatMoney(getInvoiceTotal(selectedInvoice))
-      ),
-      addMessageLine(
-        "Payment Method",
-        selectedInvoice.paymentMethod
-      ),
-      addMessageLine(
-        "Payment Status",
-        selectedInvoice.paymentStatus
-      ),
-      "",
-      "🛡️ WARRANTY & GUARANTEE",
-      addMessageLine("Warranty", selectedInvoice.warranty),
-      addMessageLine("Guarantee", selectedInvoice.guarantee),
-      "",
-      "🏪 Ganesh Mobile Shop",
-      "Bhopal, Madhya Pradesh",
-      customerPhone
-        ? addMessageLine("Customer Mobile", customerPhone)
-        : "",
+      addMessageLine("IMEI / Serial Number", imei),
+      addMessageLine("Total Amount", invoiceTotal),
       "",
       message.trim() || DEFAULT_MESSAGE,
     ];
 
-    // Remove empty lines while preserving section spacing.
-    return lines
-      .filter((line, index) => {
-        if (line !== "") return true;
+    return lines.filter((line) => line !== "").join("\n");
+  }, [selectedInvoice, selectedCustomer, message]);
 
-        return (
-          index > 0 &&
-          index < lines.length - 1 &&
-          lines[index - 1] !== "" &&
-          lines[index + 1] !== ""
-        );
-      })
-      .join("\n");
-  }, [selectedCustomer, selectedInvoice, message]);
+  // ================================================
+  // VALIDATE WHATSAPP NUMBER
+  // ================================================
 
-  const handleSend = () => {
+  const getWhatsAppNumber = () => {
+    const phone = getCustomerPhone(selectedCustomer);
+
+    if (!phone) {
+      setError(
+        "This customer does not have a registered mobile number."
+      );
+      return null;
+    }
+
+    let number = String(phone).replace(/\D/g, "");
+
+    // Convert a standard Indian 10-digit number to country code format.
+    if (number.length === 10) {
+      number = `91${number}`;
+    } else if (
+      number.length === 11 &&
+      number.startsWith("0")
+    ) {
+      number = `91${number.slice(1)}`;
+    }
+
+    if (number.length < 11 || number.length > 15) {
+      setError(
+        "The customer's mobile number is invalid. Please check the saved number."
+      );
+      return null;
+    }
+
+    return number;
+  };
+
+  // ================================================
+  // OPEN WHATSAPP WITH MESSAGE
+  // ================================================
+
+  const handleSendWhatsApp = () => {
     setError("");
     setNotice("");
 
@@ -1218,138 +410,207 @@ function WhatsApp() {
       return;
     }
 
-    const invoiceCustomer = getInvoiceCustomer(
-      selectedInvoice,
-      selectedCustomer
+    const number = getWhatsAppNumber();
+
+    if (!number) return;
+
+    const text = encodeURIComponent(generatedMessage);
+
+    const whatsappUrl =
+      `https://wa.me/${number}?text=${text}`;
+
+    window.open(
+      whatsappUrl,
+      "_blank",
+      "noopener,noreferrer"
     );
 
-    const rawPhone =
-      getCustomerPhone(invoiceCustomer) ||
-      getCustomerPhone(selectedCustomer);
+    setNotice(
+      "WhatsApp opened with the invoice message. Review it and press Send in WhatsApp."
+    );
+  };
 
-    const phone = String(rawPhone).replace(/\D/g, "");
+  // ================================================
+  // COPY MESSAGE
+  // ================================================
 
-    if (!phone) {
+  const handleCopyMessage = async () => {
+    setError("");
+    setNotice("");
+
+    if (!selectedCustomer || !selectedInvoice) {
       setError(
-        "This customer does not have a phone number. Add the mobile number to the customer record or invoice."
+        "Select a customer and invoice before copying the message."
       );
       return;
     }
 
-    // Indian numbers with a 10-digit local number get country code 91.
-    const internationalPhone =
-      phone.length === 10 ? `91${phone}` : phone;
+    try {
+      await navigator.clipboard.writeText(
+        generatedMessage
+      );
 
-    if (
-      internationalPhone.length < 11 ||
-      internationalPhone.length > 15
-    ) {
-      setError("Please check the customer's phone number.");
-      return;
+      setNotice("Invoice message copied successfully.");
+    } catch (err) {
+      console.error("Copy message error:", err);
+
+      setError(
+        "Unable to copy automatically. Please select and copy the message manually."
+      );
     }
-
-    const url = `https://wa.me/${internationalPhone}?text=${encodeURIComponent(
-      previewText
-    )}`;
-
-    window.open(url, "_blank", "noopener,noreferrer");
-
-    setNotice(
-      "WhatsApp opened with your prefilled message. Review it and press Send in WhatsApp."
-    );
   };
 
+  // ================================================
+  // PAGE COUNTS
+  // ================================================
+
+  const matchingInvoiceCount = filteredInvoices.length;
+
+  const selectedPhone = selectedCustomer
+    ? getCustomerPhone(selectedCustomer)
+    : "";
+
+  const selectedInvoiceCustomer = selectedInvoice
+    ? getInvoiceCustomer(
+        selectedInvoice,
+        selectedCustomer
+      )
+    : null;
+      // ================================================
+  // PAGE UI
+  // ================================================
+
   return (
-    <div className="min-h-screen w-full overflow-x-clip bg-[#f7f7f8] text-gray-900">
+    <div
+      className="min-h-screen w-full text-[#171914]"
+      style={{ backgroundColor: PAGE_BG }}
+    >
       <Sidebar />
 
-      <main className="min-h-screen min-w-0 w-full md:ml-[250px] md:w-[calc(100%-250px)]">
-        <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">
-          {/* Page heading */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div className="min-w-0">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="rounded-xl bg-green-100 p-2.5 text-green-700">
-                  <MessageCircle size={22} />
-                </span>
+      <main
+        className="min-h-screen px-4 py-6 sm:px-6 lg:ml-[250px] lg:px-8"
+        style={{ backgroundColor: PAGE_BG }}
+      >
+        <motion.div
+          variants={pageAnimation}
+          initial="hidden"
+          animate="visible"
+          className="mx-auto max-w-[1600px] space-y-6"
+        >
+          {/* PAGE HEADER */}
 
-                <span className="text-sm font-semibold text-green-700">
-                  Customer communication
-                </span>
+          <motion.header
+            variants={itemAnimation}
+            className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
+          >
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-green-700">
+                <div className="rounded-xl bg-green-100 p-2">
+                  <MessageCircle size={19} />
+                </div>
+
+                Customer Communication
               </div>
 
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              <h1 className="text-2xl font-extrabold tracking-tight text-[#171914] sm:text-3xl">
                 Send Invoice via WhatsApp
               </h1>
 
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-[#746D5E] sm:text-base">
                 Send invoice details directly to your customer.
               </p>
             </div>
 
             <motion.button
               type="button"
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.97 }}
               onClick={loadData}
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 self-start rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm transition hover:border-[#d4af37] disabled:opacity-60 sm:self-auto"
+              whileHover={{
+                y: -3,
+                scale: 1.02,
+              }}
+              whileTap={{ scale: 0.96 }}
+              transition={spring}
+              className="inline-flex items-center justify-center gap-2 self-start rounded-xl border border-[#E6D9BD] bg-[#FFFEFA] px-4 py-3 text-sm font-semibold text-[#171914] shadow-sm transition hover:bg-[#FFF6D9] disabled:opacity-50 sm:self-auto"
             >
               <RefreshCw
-                size={16}
+                size={17}
                 className={loading ? "animate-spin" : ""}
               />
+
               Refresh data
             </motion.button>
-          </motion.div>
+          </motion.header>
 
-          {/* Alerts */}
-          <AnimatePresence>
+          {/* ERROR AND SUCCESS MESSAGES */}
+
+          <AnimatePresence mode="wait">
             {error && (
               <motion.div
                 key="error"
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+                exit={{ opacity: 0, y: -8 }}
+                className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
               >
                 <AlertCircle
                   size={19}
                   className="mt-0.5 shrink-0"
                 />
-                <p className="break-words">{error}</p>
+
+                <span className="flex-1">{error}</span>
+
+                <button
+                  type="button"
+                  onClick={() => setError("")}
+                  aria-label="Dismiss error"
+                  className="font-bold"
+                >
+                  ×
+                </button>
               </motion.div>
             )}
 
-            {notice && (
+            {!error && notice && (
               <motion.div
                 key="notice"
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="mb-5 flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800"
+                exit={{ opacity: 0, y: -8 }}
+                className="flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800"
               >
                 <CheckCircle2
                   size={19}
                   className="mt-0.5 shrink-0"
                 />
-                <p className="break-words">{notice}</p>
+
+                <span className="flex-1">{notice}</span>
+
+                <button
+                  type="button"
+                  onClick={() => setNotice("")}
+                  aria-label="Dismiss notice"
+                  className="font-bold"
+                >
+                  ×
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Statistics */}
-          <div className="mb-6 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {/* SUMMARY CARDS */}
+
+          <motion.div
+            variants={pageAnimation}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 gap-4 md:grid-cols-3"
+          >
             <StatCard
               title="Total Customers"
               value={customers.length}
               icon={UserRound}
-              tone="bg-blue-50 text-blue-700"
+              tone="bg-blue-50 text-blue-600"
               index={0}
             />
 
@@ -1357,101 +618,127 @@ function WhatsApp() {
               title="Available Invoices"
               value={invoices.length}
               icon={FileText}
-              tone="bg-amber-50 text-amber-700"
+              tone="bg-[#FFF6D9] text-[#9B7613]"
               index={1}
             />
 
             <StatCard
               title="Matching Invoices"
-              value={filteredInvoices.length}
+              value={matchingInvoiceCount}
               icon={MessageCircle}
               tone="bg-green-50 text-green-700"
               index={2}
             />
-          </div>
+          </motion.div>
 
-          {/* Form and preview */}
-          <div className="grid min-w-0 grid-cols-1 items-start gap-6 2xl:grid-cols-2">
-            {/* Invoice form */}
-            <motion.section
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4 }}
-              className="min-w-0 w-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
-            >
-              <div className="border-b border-gray-100 p-5 sm:p-6">
-                <h2 className="text-lg font-bold">
-                  Invoice details
-                </h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  Choose a customer and invoice to share.
-                </p>
-              </div>
+          {/* MAIN FORM CARD */}
 
-              <div className="space-y-6 p-5 sm:p-6">
-                {/* Customer selector */}
-                <div>
-                  <label
-                    htmlFor="whatsapp-customer"
-                    className="mb-2 block text-sm font-semibold text-gray-700"
+          <motion.section
+            variants={itemAnimation}
+            whileHover={{
+              boxShadow:
+                "0 14px 32px rgba(184,134,11,0.06)",
+            }}
+            transition={spring}
+            className="overflow-hidden rounded-2xl border border-[#E6D9BD] bg-[#FFFEFA] shadow-sm"
+          >
+            {/* CARD HEADER */}
+
+            <div className="border-b border-[#EEE5D2] p-5 sm:p-6">
+              <h2 className="text-lg font-bold text-[#171914]">
+                Invoice details
+              </h2>
+
+              <p className="mt-1 text-sm text-[#746D5E]">
+                Choose a customer and invoice to share.
+              </p>
+            </div>
+
+            <div className="space-y-6 p-5 sm:p-6">
+              {/* CUSTOMER SELECTOR */}
+
+              <section>
+                <label
+                  htmlFor="whatsapp-customer"
+                  className="mb-2 block text-sm font-semibold text-[#171914]"
+                >
+                  Customer
+                </label>
+
+                <div className="relative">
+                  <UserRound
+                    size={17}
+                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#948A76]"
+                  />
+
+                  <select
+                    id="whatsapp-customer"
+                    value={customerId}
+                    onChange={handleCustomerChange}
+                    disabled={loading}
+                    className="w-full appearance-none rounded-xl border border-[#E6D9BD] bg-[#FFFEFA] py-3 pl-11 pr-10 text-sm text-[#171914] outline-none transition focus:border-[#D4AF37] focus:ring-4 focus:ring-amber-100 disabled:opacity-50"
                   >
-                    Customer
-                  </label>
+                    <option value="">
+                      Select customer...
+                    </option>
 
-                  <div className="relative">
-                    <UserRound
-                      size={17}
-                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-
-                    <select
-                      id="whatsapp-customer"
-                      value={customerId}
-                      onChange={(event) =>
-                        handleCustomerChange(event.target.value)
-                      }
-                      disabled={loading || customers.length === 0}
-                      className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3.5 pl-10 pr-10 text-sm outline-none transition focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 disabled:bg-gray-50"
-                    >
-                      <option value="">
-                        {loading
-                          ? "Loading customers..."
-                          : "Select a customer"}
+                    {customers.map((customer) => (
+                      <option
+                        key={getCustomerId(customer)}
+                        value={getCustomerId(customer)}
+                      >
+                        {getCustomerName(customer)}
+                        {getCustomerPhone(customer)
+                          ? ` - ${getCustomerPhone(customer)}`
+                          : ""}
                       </option>
+                    ))}
+                  </select>
 
-                      {customers.map((customer) => (
-                        <option
-                          key={getCustomerId(customer)}
-                          value={getCustomerId(customer)}
-                        >
-                          {getCustomerName(customer)}
-                          {getCustomerPhone(customer)
-                            ? ` - ${getCustomerPhone(customer)}`
-                            : ""}
-                        </option>
-                      ))}
-                    </select>
+                  <ChevronDown
+                    size={17}
+                    className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#948A76]"
+                  />
+                </div>
 
-                    <ChevronDown
-                      size={16}
-                      className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-                  </div>
-
+                <AnimatePresence mode="wait">
                   {selectedCustomer && (
-                    <div className="mt-3 flex min-w-0 items-center gap-3 rounded-xl bg-gray-50 p-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f7e6b0] font-bold text-gray-800">
-                        {getCustomerName(selectedCustomer)
-                          .slice(0, 1)
+                    <motion.div
+                      key={customerId}
+                      initial={{
+                        opacity: 0,
+                        y: 8,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                      }}
+                      exit={{
+                        opacity: 0,
+                        y: -5,
+                      }}
+                      transition={spring}
+                      className="mt-3 flex items-center gap-3 rounded-xl border border-transparent bg-[#F8F5ED] p-3 transition hover:border-[#E6D9BD]"
+                    >
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F9E6A5] font-bold text-[#171914]">
+                        {getCustomerName(
+                          selectedCustomer
+                        )
+                          .charAt(0)
                           .toUpperCase()}
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">
-                          {getCustomerName(selectedCustomer)}
+                        <p className="truncate text-sm font-bold text-[#171914]">
+                          {getCustomerName(
+                            selectedCustomer
+                          )}
                         </p>
-                        <p className="mt-0.5 break-words text-xs text-gray-500">
-                          {getCustomerPhone(selectedCustomer) ||
+
+                        <p className="mt-1 flex items-center gap-1.5 text-xs text-[#746D5E]">
+                          <Smartphone size={13} />
+
+                          {selectedPhone ||
                             "No phone number available"}
                         </p>
                       </div>
@@ -1460,312 +747,325 @@ function WhatsApp() {
                         size={18}
                         className="shrink-0 text-green-600"
                       />
-                    </div>
+                    </motion.div>
                   )}
+                </AnimatePresence>
+
+                {!loading && customers.length === 0 && (
+                  <p className="mt-2 text-xs text-amber-700">
+                    No customers found. Add a customer first.
+                  </p>
+                )}
+              </section>
+
+              {/* INVOICE SELECTOR */}
+
+              <section>
+                <label
+                  htmlFor="whatsapp-invoice-search"
+                  className="mb-2 block text-sm font-semibold text-[#171914]"
+                >
+                  Invoice
+                </label>
+
+                <div className="relative">
+                  <Search
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#948A76]"
+                  />
+
+                  <input
+                    id="whatsapp-invoice-search"
+                    type="text"
+                    value={search}
+                    onChange={(event) =>
+                      setSearch(event.target.value)
+                    }
+                    placeholder="Search invoice number..."
+                    disabled={!customerId}
+                    className="w-full rounded-xl border border-[#E6D9BD] bg-[#F9F6EE] py-3 pl-11 pr-4 text-sm text-[#171914] outline-none transition placeholder:text-[#948A76] focus:border-[#D4AF37] focus:bg-white focus:ring-4 focus:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
                 </div>
 
-                {/* Invoice selector */}
-                <div>
-                  <label
-                    htmlFor="whatsapp-invoice-search"
-                    className="mb-2 block text-sm font-semibold text-gray-700"
-                  >
-                    Invoice
-                  </label>
+                <div className="mt-3 space-y-2">
+                  {filteredInvoices.map((invoice) => {
+                    const id = getInvoiceId(invoice);
+                    const active = id === invoiceId;
 
-                  <div className="relative mb-3">
-                    <Search
-                      size={17}
-                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
+                    const invoiceCustomer =
+                      getInvoiceCustomer(
+                        invoice,
+                        selectedCustomer
+                      );
 
-                    <input
-                      id="whatsapp-invoice-search"
-                      value={search}
-                      onChange={(event) =>
-                        setSearch(event.target.value)
-                      }
-                      placeholder="Search invoice number..."
-                      className="w-full rounded-xl border border-gray-200 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10"
-                    />
-                  </div>
+                    return (
+                      <motion.button
+                        key={id || getInvoiceNumber(invoice)}
+                        type="button"
+                        onClick={() =>
+                          setInvoiceId(id)
+                        }
+                        whileHover={{
+                          y: -2,
+                          borderColor: GOLD_COLOR,
+                        }}
+                        whileTap={{ scale: 0.99 }}
+                        transition={spring}
+                        className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition ${
+                          active
+                            ? "border-[#D4AF37] bg-[#FFF6D9]"
+                            : "border-[#E6D9BD] bg-[#FFFEFA] hover:bg-[#F9F6EE]"
+                        }`}
+                      >
+                        <span className="flex min-w-0 items-center gap-3">
+                          <span
+                            className={`rounded-lg p-2 ${
+                              active
+                                ? "bg-[#F4C64E] text-black"
+                                : "bg-[#F4F0E6] text-[#746D5E]"
+                            }`}
+                          >
+                            <FileText size={17} />
+                          </span>
 
-                  <div className="relative">
-                    <FileText
-                      size={17}
-                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-bold text-[#171914]">
+                              {getInvoiceNumber(invoice) ||
+                                "Invoice"}
+                            </span>
 
-                    <select
-                      value={invoiceId}
-                      onChange={(event) => {
-                        setInvoiceId(event.target.value);
-                        setError("");
-                        setNotice("");
-                      }}
-                      disabled={
-                        loading || filteredInvoices.length === 0
-                      }
-                      className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-3.5 pl-10 pr-10 text-sm outline-none transition focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 disabled:bg-gray-50"
-                    >
-                      <option value="">
-                        {loading
-                          ? "Loading invoices..."
-                          : filteredInvoices.length
-                            ? "Select an invoice"
-                            : "No matching invoices"}
-                      </option>
+                            <span className="mt-1 block truncate text-xs text-[#746D5E]">
+                              {getCustomerName(
+                                invoiceCustomer
+                              )}
+                              {" · "}
+                              {getInvoiceDate(invoice) ||
+                                "Date unavailable"}
+                            </span>
+                          </span>
+                        </span>
 
-                      {filteredInvoices.map((invoice) => (
-                        <option
-                          key={getInvoiceId(invoice)}
-                          value={getInvoiceId(invoice)}
-                        >
-                          {getInvoiceNumber(invoice) || "Invoice"} —{" "}
-                          {formatMoney(getInvoiceTotal(invoice))}
-                        </option>
-                      ))}
-                    </select>
+                        <span className="flex shrink-0 items-center gap-2">
+                          <span className="text-sm font-bold text-[#171914]">
+                            {formatMoney(
+                              getInvoiceTotal(invoice)
+                            )}
+                          </span>
 
-                    <ChevronDown
-                      size={16}
-                      className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-                  </div>
+                          {active && (
+                            <CheckCircle2
+                              size={17}
+                              className="text-green-600"
+                            />
+                          )}
+                        </span>
+                      </motion.button>
+                    );
+                  })}
 
-                  {selectedInvoice && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#f1dfad] bg-[#fffaf0] p-4"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-gray-500">
-                          Selected invoice
+                  {!loading &&
+                    customerId &&
+                    filteredInvoices.length === 0 && (
+                      <div className="rounded-xl border border-dashed border-[#E6D9BD] bg-[#F9F6EE] px-4 py-8 text-center">
+                        <FileText
+                          size={25}
+                          className="mx-auto text-[#948A76]"
+                        />
+
+                        <p className="mt-3 text-sm font-semibold text-[#171914]">
+                          No matching invoices
                         </p>
-                        <p className="mt-1 break-words text-sm font-bold">
-                          {getInvoiceNumber(selectedInvoice) ||
-                            "Invoice"}
-                        </p>
-                        <p className="mt-1 text-xs text-gray-500">
-                          {getInvoiceDate(selectedInvoice)}
+
+                        <p className="mt-1 text-xs text-[#746D5E]">
+                          Try another invoice number or create a sale.
                         </p>
                       </div>
+                    )}
+                </div>
+              </section>
+                            {/* MESSAGE EDITOR */}
 
-                      <div className="min-w-0 text-left sm:text-right">
-                        <p className="text-xs text-gray-500">
-                          Total amount
-                        </p>
-                        <p className="mt-1 break-words text-sm font-bold">
-                          {formatMoney(
-                            getInvoiceTotal(selectedInvoice)
-                          )}
-                        </p>
+              <section>
+                <label
+                  htmlFor="whatsapp-message"
+                  className="mb-2 block text-sm font-semibold text-[#171914]"
+                >
+                  Personal Message
+                </label>
+
+                <textarea
+                  id="whatsapp-message"
+                  value={message}
+                  onChange={(event) =>
+                    setMessage(event.target.value)
+                  }
+                  rows={3}
+                  placeholder="Write a personal message..."
+                  className="w-full resize-y rounded-xl border border-[#E6D9BD] bg-[#F9F6EE] px-4 py-3 text-sm text-[#171914] outline-none transition placeholder:text-[#948A76] focus:border-[#D4AF37] focus:bg-white focus:ring-4 focus:ring-amber-100"
+                />
+
+                <p className="mt-1 text-xs text-[#746D5E]">
+                  This message is added to the invoice details
+                  before opening WhatsApp.
+                </p>
+              </section>
+
+              {/* INVOICE MESSAGE PREVIEW */}
+
+              <section className="overflow-hidden rounded-2xl border border-[#D6E8D7] bg-[#F0F8F0]">
+                <div className="flex items-center justify-between gap-3 border-b border-[#D6E8D7] px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-lg bg-green-100 p-2 text-green-700">
+                      <MessageCircle size={17} />
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-bold text-[#171914]">
+                        WhatsApp Message Preview
+                      </h3>
+
+                      <p className="text-xs text-[#58715A]">
+                        Review before sending
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
+                    Preview
+                  </span>
+                </div>
+
+                <div className="p-4 sm:p-5">
+                  {!selectedCustomer || !selectedInvoice ? (
+                    <div className="rounded-xl border border-dashed border-[#D6E8D7] bg-white/70 p-6 text-center">
+                      <FileText
+                        size={25}
+                        className="mx-auto text-[#79947B]"
+                      />
+
+                      <p className="mt-3 text-sm font-semibold text-[#171914]">
+                        Select a customer and invoice
+                      </p>
+
+                      <p className="mt-1 text-xs text-[#58715A]">
+                        Your invoice message will appear here.
+                      </p>
+                    </div>
+                  ) : (
+                    <motion.div
+                      key={`${customerId}-${invoiceId}`}
+                      initial={{
+                        opacity: 0,
+                        y: 8,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                      }}
+                      transition={spring}
+                      className="relative ml-auto max-w-2xl rounded-2xl rounded-tr-sm border border-[#D6E8D7] bg-white p-4 shadow-sm"
+                    >
+                      <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-6 text-[#243426]">
+                        {generatedMessage}
+                      </pre>
+
+                      <div className="mt-3 flex items-center justify-end gap-1 text-[10px] text-[#79947B]">
+                        <CheckCircle2 size={12} />
+                        Message preview
                       </div>
                     </motion.div>
                   )}
                 </div>
+              </section>
 
-                {/* Custom message */}
+              {/* ACTION BUTTONS */}
+
+              <section className="flex flex-col justify-between gap-4 border-t border-[#EEE5D2] pt-5 sm:flex-row sm:items-center">
                 <div>
-                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                    <label
-                      htmlFor="whatsapp-message"
-                      className="text-sm font-semibold text-gray-700"
-                    >
-                      Message (Optional)
-                    </label>
+                  <p className="text-sm font-semibold text-[#171914]">
+                    Ready to share?
+                  </p>
 
-                    <button
-                      type="button"
-                      onClick={() => setMessage(DEFAULT_MESSAGE)}
-                      className="text-xs font-semibold text-gray-500 transition hover:text-gray-900"
-                    >
-                      Reset message
-                    </button>
-                  </div>
-
-                  <textarea
-                    id="whatsapp-message"
-                    value={message}
-                    onChange={(event) =>
-                      setMessage(event.target.value)
-                    }
-                    rows={4}
-                    maxLength={500}
-                    placeholder="Write a short message for your customer..."
-                    className="w-full resize-y rounded-xl border border-gray-200 px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10"
-                  />
-
-                  <p className="mt-1 text-right text-xs text-gray-400">
-                    {message.length}/500 characters
+                  <p className="mt-1 text-xs text-[#746D5E]">
+                    WhatsApp will open with your prepared message.
                   </p>
                 </div>
 
-                {/* Send */}
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.01, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleSend}
-                  disabled={loading}
-                  className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#16a34a] px-5 py-4 text-sm font-bold text-white shadow-lg shadow-green-600/15 transition hover:bg-[#128c3e] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <MessageCircle size={21} />
-                  Send via WhatsApp
-                  <ExternalLink size={16} />
-                </motion.button>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <motion.button
+                    type="button"
+                    onClick={handleCopyMessage}
+                    disabled={
+                      !selectedCustomer || !selectedInvoice
+                    }
+                    whileHover={{
+                      y: -2,
+                      scale: 1.02,
+                    }}
+                    whileTap={{
+                      scale: 0.97,
+                    }}
+                    transition={spring}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#E6D9BD] bg-[#FFFEFA] px-4 py-3 text-sm font-semibold text-[#171914] transition hover:border-[#D4AF37] hover:bg-[#FFF6D9] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Paperclip size={17} />
+                    Copy message
+                  </motion.button>
 
-                <p className="text-center text-xs leading-5 text-gray-400">
-                  WhatsApp opens in a new tab. Review and send the
-                  message from WhatsApp.
+                  <motion.button
+                    type="button"
+                    onClick={handleSendWhatsApp}
+                    disabled={
+                      !selectedCustomer ||
+                      !selectedInvoice ||
+                      loading
+                    }
+                    whileHover={{
+                      y: -3,
+                      scale: 1.02,
+                    }}
+                    whileTap={{
+                      scale: 0.96,
+                    }}
+                    transition={spring}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F4C64E] px-5 py-3 text-sm font-bold text-black shadow-md shadow-[#D4AF37]/20 transition hover:bg-[#E7B83B] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Send size={17} />
+                    Open WhatsApp
+                    <ExternalLink size={15} />
+                  </motion.button>
+                </div>
+              </section>
+            </div>
+          </motion.section>
+
+          {/* HELPFUL INFORMATION */}
+
+          <motion.section
+            variants={itemAnimation}
+            className="rounded-2xl border border-[#E6D9BD] bg-[#FFFEFA] p-4 sm:p-5"
+          >
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-[#FFF6D9] p-2.5 text-[#9B7613]">
+                <Store size={19} />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-bold text-[#171914]">
+                  Important information
+                </h3>
+
+                <p className="mt-1 text-sm leading-6 text-[#746D5E]">
+                  This feature prepares an invoice message and
+                  opens WhatsApp. Review the customer number
+                  and message, then press Send in WhatsApp.
+                  It does not automatically attach a PDF invoice
+                  or send messages in the background.
                 </p>
               </div>
-            </motion.section>
-
-            {/* Live WhatsApp preview */}
-            <motion.section
-              initial={{ opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: 0.05 }}
-              className="min-w-0 w-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
-            >
-              <div className="flex items-center justify-between gap-3 border-b border-gray-100 p-5 sm:p-6">
-                <div className="min-w-0">
-                  <h2 className="text-lg font-bold">
-                    Message preview
-                  </h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Preview your message before sending.
-                  </p>
-                </div>
-
-                <span className="shrink-0 rounded-xl bg-green-50 p-3 text-green-700">
-                  <Smartphone size={21} />
-                </span>
-              </div>
-
-              <div className="p-4 sm:p-6">
-                <div className="mx-auto w-full max-w-[360px] overflow-hidden rounded-[28px] border-[5px] border-[#252525] bg-[#efe8dd] shadow-xl">
-                  {/* Phone header */}
-                  <div className="flex items-center gap-3 bg-[#075e54] px-3 py-4 text-white sm:px-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f5dfa2] text-gray-900">
-                      <Store size={21} />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold">
-                        Ganesh Mobile Shop
-                      </p>
-                      <p className="mt-0.5 text-xs text-white/75">
-                        Business Account
-                      </p>
-                    </div>
-
-                    <MessageCircle
-                      size={20}
-                      className="shrink-0"
-                    />
-                  </div>
-
-                  {/* Chat */}
-                  <div
-                    className="min-h-[350px] p-3 sm:min-h-[420px] sm:p-4"
-                    style={{
-                      backgroundColor: "#efe8dd",
-                      backgroundImage:
-                        "radial-gradient(rgba(110,100,80,0.08) 1px, transparent 1px)",
-                      backgroundSize: "17px 17px",
-                    }}
-                  >
-                    <div className="mb-4 text-center">
-                      <span className="rounded-lg bg-[#e2d9cb] px-3 py-1.5 text-[10px] font-medium text-gray-600">
-                        TODAY
-                      </span>
-                    </div>
-
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={`${customerId}-${invoiceId}-${message}`}
-                        initial={{
-                          opacity: 0,
-                          y: 8,
-                          scale: 0.98,
-                        }}
-                        animate={{
-                          opacity: 1,
-                          y: 0,
-                          scale: 1,
-                        }}
-                        exit={{ opacity: 0, y: -4 }}
-                        transition={{ duration: 0.2 }}
-                        className="ml-auto max-w-[96%] rounded-2xl rounded-tr-sm bg-[#dcf8c6] p-3 shadow-sm sm:p-4"
-                      >
-                        <p className="mb-3 text-[11px] font-bold text-[#075e54]">
-                          Ganesh Mobile Shop
-                        </p>
-
-                        <p className="whitespace-pre-wrap break-words text-[12px] leading-[1.75] text-gray-800 sm:text-[13px]">
-                          {previewText}
-                        </p>
-
-                        <div className="mt-3 flex items-center justify-end gap-1.5">
-                          <span className="text-[10px] text-gray-500">
-                            {new Date().toLocaleTimeString("en-IN", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                          <CheckCircle2
-                            size={13}
-                            className="text-blue-500"
-                          />
-                        </div>
-                      </motion.div>
-                    </AnimatePresence>
-
-                    <div className="mt-5 flex items-center justify-center gap-2 rounded-full bg-white/80 px-3 py-2 text-center text-[10px] text-gray-500 shadow-sm sm:text-[11px]">
-                      <Paperclip size={13} className="shrink-0" />
-                      Invoice details shown in message
-                    </div>
-                  </div>
-
-                  {/* Chat input preview */}
-                  <div className="flex items-center gap-2 bg-[#f7f7f7] p-2 sm:p-3">
-                    <div className="min-w-0 flex-1 rounded-full bg-white px-3 py-3 text-xs text-gray-400 sm:px-4">
-                      Type a message
-                    </div>
-
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#128c7e] text-white">
-                      <Send size={16} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-5 flex items-start gap-3 rounded-xl border border-green-100 bg-green-50 p-4">
-                  <CheckCircle2
-                    size={19}
-                    className="mt-0.5 shrink-0 text-green-700"
-                  />
-
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-green-900">
-                      Live message preview
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-green-800/80">
-                      Changing the customer, invoice, or message
-                      automatically updates the preview.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </motion.section>
-          </div>
-
-          <p className="mt-6 text-center text-xs text-gray-400">
-            Ganesh Mobile Shop · Shop Smarter, Grow Faster
-          </p>
-        </div>
+            </div>
+          </motion.section>
+        </motion.div>
       </main>
     </div>
   );

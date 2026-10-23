@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -15,10 +16,8 @@ import {
   Package,
   AlertCircle,
   Search,
-  X,
   CheckCircle2,
   Clock3,
-  IndianRupee,
   Sparkles,
   ArrowUpRight,
 } from "lucide-react";
@@ -26,7 +25,24 @@ import {
 import Sidebar from "../../components/layout/Sidebar";
 import api from "../../services/api";
 
-/* ================= HELPERS ================= */
+// ==================================================
+// THEME
+// ==================================================
+
+const THEME = {
+  page: "#F4F0E6",
+  card: "#FFFEFA",
+  border: "#E6D9BD",
+  text: "#171914",
+  muted: "#746D5E",
+  gold: "#F4C64E",
+  goldDark: "#B8860B",
+  hover: "#FFF8E5",
+};
+
+// ==================================================
+// HELPERS
+// ==================================================
 
 const money = (value) =>
   new Intl.NumberFormat("en-IN", {
@@ -110,6 +126,7 @@ const statusOf = (invoice) => {
 const itemsOf = (invoice) => {
   if (Array.isArray(invoice?.items)) return invoice.items;
   if (Array.isArray(invoice?.products)) return invoice.products;
+
   if (Array.isArray(invoice?.sale?.items)) {
     return invoice.sale.items;
   }
@@ -158,47 +175,69 @@ const lineTotal = (item) =>
       unitPrice(item) * Number(item?.quantity || 1)
   );
 
-/* ================= ANIMATIONS ================= */
+// ==================================================
+// ANIMATIONS
+// ==================================================
 
 const pageAnimation = {
-  hidden: { opacity: 0, y: 25 },
+  hidden: {
+    opacity: 0,
+    y: 20,
+  },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.55,
-      staggerChildren: 0.09,
+      duration: 0.45,
+      staggerChildren: 0.07,
     },
   },
 };
 
 const itemAnimation = {
-  hidden: { opacity: 0, y: 18 },
+  hidden: {
+    opacity: 0,
+    y: 14,
+  },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4 },
+    transition: {
+      duration: 0.35,
+    },
   },
 };
 
-/* ================= STATUS BADGE ================= */
+const spring = {
+  type: "spring",
+  stiffness: 300,
+  damping: 24,
+};
+
+// ==================================================
+// STATUS BADGE
+// ==================================================
 
 function StatusBadge({ status }) {
   const styles = {
-    PAID: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    PAID: "bg-green-50 text-green-700 border-green-200",
     PENDING: "bg-amber-50 text-amber-800 border-amber-200",
-    FAILED: "bg-rose-50 text-rose-700 border-rose-200",
-    CANCELLED: "bg-slate-100 text-slate-600 border-slate-200",
+    FAILED: "bg-red-50 text-red-700 border-red-200",
+    CANCELLED: "bg-gray-100 text-gray-600 border-gray-200",
   };
 
-  const Icon = status === "PAID" ? CheckCircle2 : Clock3;
+  const Icon =
+    status === "PAID" ? CheckCircle2 : Clock3;
 
   return (
     <motion.span
       key={status}
-      initial={{ opacity: 0, scale: 0.8 }}
+      initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold ${styles[status] || styles.PENDING}`}
+      transition={spring}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold ${
+        styles[status] || styles.PENDING
+      }`}
     >
       <Icon size={13} />
       {status}
@@ -206,7 +245,9 @@ function StatusBadge({ status }) {
   );
 }
 
-/* ================= ANIMATED BUTTON ================= */
+// ==================================================
+// ANIMATED BUTTON
+// ==================================================
 
 function AnimatedButton({
   children,
@@ -217,11 +258,11 @@ function AnimatedButton({
 }) {
   const variants = {
     light:
-      "border border-slate-200 bg-white text-slate-800 hover:border-amber-400 hover:bg-amber-50",
+      "border border-[#E6D9BD] bg-[#FFFEFA] text-[#171914] hover:border-[#D4AF37] hover:bg-[#FFF6D9]",
     gold:
-      "bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20 hover:bg-amber-300",
+      "bg-[#F4C64E] text-black shadow-lg shadow-[#D4AF37]/20 hover:bg-[#E7B83B]",
     dark:
-      "bg-slate-950 text-white hover:bg-slate-800",
+      "bg-[#171914] text-white hover:bg-[#303126]",
   };
 
   return (
@@ -229,16 +270,34 @@ function AnimatedButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      whileHover={disabled ? {} : { y: -3, scale: 1.02 }}
-      whileTap={disabled ? {} : { scale: 0.96 }}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
+      whileHover={
+        disabled
+          ? undefined
+          : {
+              y: -3,
+              scale: 1.02,
+            }
+      }
+      whileTap={
+        disabled
+          ? undefined
+          : {
+              scale: 0.96,
+            }
+      }
+      transition={spring}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+        variants[variant]
+      } ${className}`}
     >
       {children}
     </motion.button>
   );
 }
 
-/* ================= INVOICE DOCUMENT ================= */
+// ==================================================
+// INVOICE DOCUMENT
+// ==================================================
 
 function InvoiceDocument({ invoice }) {
   const items = itemsOf(invoice);
@@ -268,7 +327,10 @@ function InvoiceDocument({ invoice }) {
     invoice?.subtotal ??
       invoice?.subTotal ??
       invoice?.sale?.subtotal ??
-      items.reduce((sum, item) => sum + lineTotal(item), 0)
+      items.reduce(
+        (sum, item) => sum + lineTotal(item),
+        0
+      )
   );
 
   const discount = Number(
@@ -278,21 +340,27 @@ function InvoiceDocument({ invoice }) {
   );
 
   return (
-    <article className="invoice-sheet relative overflow-hidden bg-white p-5 text-slate-900 sm:p-8 lg:p-10">
-      <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-amber-100/40 blur-3xl" />
+    <article className="invoice-sheet relative overflow-hidden bg-white p-5 text-[#171914] sm:p-8 lg:p-10">
+      {/* Soft gold decorative background */}
 
-      {/* Shop heading */}
-      <div className="relative flex flex-col justify-between gap-6 border-b-2 border-slate-900 pb-6 sm:flex-row sm:items-start">
+      <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-[#FFF6D9]/50 blur-3xl" />
+
+      {/* SHOP HEADING */}
+
+      <div className="relative flex flex-col justify-between gap-6 border-b-2 border-[#171914] pb-6 sm:flex-row sm:items-start">
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: -15 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.4 }}
           className="flex items-start gap-3"
         >
           <motion.div
-            whileHover={{ rotateY: 180, scale: 1.08 }}
-            transition={{ duration: 0.45 }}
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 text-slate-950 shadow-lg shadow-amber-300/30"
+            whileHover={{
+              rotate: 5,
+              scale: 1.05,
+            }}
+            transition={spring}
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFE28A] to-[#F4C64E] text-[#171914] shadow-md"
           >
             <ReceiptText size={27} />
           </motion.div>
@@ -302,63 +370,74 @@ function InvoiceDocument({ invoice }) {
               Ganesh Mobile Shop
             </h2>
 
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[#746D5E]">
               Mobile Shop Management System
             </p>
 
-            <p className="mt-4 text-sm text-slate-600">
+            <p className="mt-4 text-sm text-[#746D5E]">
               Bhopal, Madhya Pradesh
             </p>
 
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[#746D5E]">
               Thank you for shopping with us!
             </p>
           </div>
         </motion.div>
 
+        {/* INVOICE SUMMARY CARD */}
+
         <motion.div
-          initial={{ opacity: 0, rotateY: 12, x: 20 }}
-          animate={{ opacity: 1, rotateY: 0, x: 0 }}
-          transition={{ duration: 0.6 }}
-          whileHover={{
-            rotateX: 2,
-            rotateY: -2,
-            y: -3,
+          initial={{
+            opacity: 0,
+            x: 15,
           }}
-          style={{ transformPerspective: 900 }}
-          className="grid grid-cols-2 gap-x-6 gap-y-4 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm sm:min-w-64"
+          animate={{
+            opacity: 1,
+            x: 0,
+          }}
+          whileHover={{
+            y: -3,
+            boxShadow:
+              "0 12px 25px rgba(184,134,11,0.10)",
+          }}
+          transition={spring}
+          className="grid grid-cols-2 gap-x-6 gap-y-4 rounded-2xl border border-[#E6D9BD] bg-[#FFFEFA] p-4 shadow-sm sm:min-w-64"
         >
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#746D5E]">
               Invoice No.
             </p>
+
             <p className="mt-1 break-all text-sm font-extrabold">
               {numberOf(invoice)}
             </p>
           </div>
 
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#746D5E]">
               Date
             </p>
+
             <p className="mt-1 text-sm font-semibold">
               {dateLabel(date)}
             </p>
           </div>
 
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#746D5E]">
               Payment
             </p>
+
             <p className="mt-1 text-sm font-semibold">
               {String(paymentMethod).replaceAll("_", " ")}
             </p>
           </div>
 
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#746D5E]">
               Status
             </p>
+
             <div className="mt-1">
               <StatusBadge status={statusOf(invoice)} />
             </div>
@@ -366,21 +445,25 @@ function InvoiceDocument({ invoice }) {
         </motion.div>
       </div>
 
-      {/* Customer details */}
-      <div className="relative grid grid-cols-1 gap-6 border-b border-slate-200 py-6 sm:grid-cols-2">
+      {/* CUSTOMER DETAILS */}
+
+      <div className="relative grid grid-cols-1 gap-6 border-b border-[#E6D9BD] py-6 sm:grid-cols-2">
         <motion.section
-          variants={itemAnimation}
-          initial="hidden"
-          animate="visible"
-          whileHover={{ y: -2 }}
-          className="rounded-xl border border-slate-100 p-3 transition hover:border-amber-200 hover:shadow-md"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          whileHover={{
+            y: -3,
+            borderColor: THEME.gold,
+          }}
+          transition={spring}
+          className="rounded-xl border border-[#E6D9BD] bg-[#FFFEFA] p-4"
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#746D5E]">
             Bill To
           </p>
 
           <div className="mt-3 flex items-start gap-3">
-            <div className="rounded-xl bg-amber-50 p-2.5 text-amber-700">
+            <div className="rounded-xl bg-[#FFF6D9] p-2.5 text-[#9B7613]">
               <UserRound size={19} />
             </div>
 
@@ -390,21 +473,24 @@ function InvoiceDocument({ invoice }) {
               </p>
 
               {phoneOf(invoice) && (
-                <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                <p className="mt-2 flex items-center gap-2 text-xs text-[#746D5E]">
                   <Smartphone size={13} />
                   {phoneOf(invoice)}
                 </p>
               )}
 
               {email && (
-                <p className="mt-1 break-all text-xs text-slate-500">
+                <p className="mt-1 break-all text-xs text-[#746D5E]">
                   {email}
                 </p>
               )}
 
               {address && (
-                <p className="mt-2 flex items-start gap-2 text-xs text-slate-500">
-                  <MapPin size={13} className="mt-0.5 shrink-0" />
+                <p className="mt-2 flex items-start gap-2 text-xs text-[#746D5E]">
+                  <MapPin
+                    size={13}
+                    className="mt-0.5 shrink-0"
+                  />
                   {address}
                 </p>
               )}
@@ -412,22 +498,27 @@ function InvoiceDocument({ invoice }) {
           </div>
         </motion.section>
 
+        {/* PAYMENT DETAILS */}
+
         <motion.section
-          variants={itemAnimation}
-          initial="hidden"
-          animate="visible"
-          whileHover={{ y: -2 }}
-          className="rounded-xl border border-slate-100 p-3 transition hover:border-amber-200 hover:shadow-md sm:text-right"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          whileHover={{
+            y: -3,
+            borderColor: THEME.gold,
+          }}
+          transition={spring}
+          className="rounded-xl border border-[#E6D9BD] bg-[#FFFEFA] p-4 sm:text-right"
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#746D5E]">
             Invoice Summary
           </p>
 
-          <div className="mt-3 space-y-3 text-xs text-slate-500">
+          <div className="mt-3 space-y-3 text-xs text-[#746D5E]">
             <p className="flex items-center gap-2 sm:justify-end">
               <CalendarDays size={14} />
               Invoice date:
-              <span className="font-semibold text-slate-800">
+              <span className="font-semibold text-[#171914]">
                 {dateLabel(date)}
               </span>
             </p>
@@ -435,7 +526,7 @@ function InvoiceDocument({ invoice }) {
             <p className="flex items-center gap-2 sm:justify-end">
               <CreditCard size={14} />
               Payment method:
-              <span className="font-semibold text-slate-800">
+              <span className="font-semibold text-[#171914]">
                 {String(paymentMethod).replaceAll("_", " ")}
               </span>
             </p>
@@ -449,53 +540,84 @@ function InvoiceDocument({ invoice }) {
         </motion.section>
       </div>
 
-      {/* Product table */}
+      {/* PRODUCT DETAILS */}
+
       <section className="relative pt-6">
         <div className="mb-4 flex items-center gap-2">
           <motion.div
-            animate={{ rotate: [0, -8, 8, 0] }}
-            transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 2 }}
-            className="rounded-lg bg-amber-50 p-2 text-amber-700"
+            animate={{
+              rotate: [0, -5, 5, 0],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              repeatDelay: 3,
+            }}
+            className="rounded-lg bg-[#FFF6D9] p-2 text-[#9B7613]"
           >
             <Package size={17} />
           </motion.div>
 
-          <h3 className="text-sm font-bold">Product Details</h3>
+          <h3 className="text-sm font-bold">
+            Product Details
+          </h3>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
+        <div className="overflow-x-auto rounded-xl border border-[#E6D9BD]">
           <table className="w-full min-w-[620px] text-left text-xs">
-            <thead className="bg-slate-950 text-white">
+            <thead className="bg-[#171914] text-white">
               <tr>
                 <th className="px-3 py-3">#</th>
                 <th className="px-3 py-3">Product</th>
-                <th className="px-3 py-3">IMEI / Serial No.</th>
-                <th className="px-3 py-3 text-center">Qty</th>
-                <th className="px-3 py-3 text-right">Price</th>
-                <th className="px-3 py-3 text-right">Total</th>
+                <th className="px-3 py-3">
+                  IMEI / Serial No.
+                </th>
+                <th className="px-3 py-3 text-center">
+                  Qty
+                </th>
+                <th className="px-3 py-3 text-right">
+                  Price
+                </th>
+                <th className="px-3 py-3 text-right">
+                  Total
+                </th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#EEE5D2]">
               <AnimatePresence mode="popLayout">
                 {items.length ? (
                   items.map((item, index) => (
                     <motion.tr
                       layout
-                      key={item?._id || `${productName(item)}-${index}`}
-                      initial={{ opacity: 0, x: -18 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 18 }}
+                      key={
+                        item?._id ||
+                        `${productName(item)}-${index}`
+                      }
+                      initial={{
+                        opacity: 0,
+                        x: -15,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        x: 0,
+                      }}
+                      exit={{
+                        opacity: 0,
+                        x: 15,
+                      }}
                       transition={{
-                        duration: 0.35,
-                        delay: Math.min(index * 0.06, 0.3),
+                        duration: 0.3,
+                        delay: Math.min(
+                          index * 0.05,
+                          0.3
+                        ),
                       }}
                       whileHover={{
-                        backgroundColor: "#fffbeb",
-                        scale: 1.003,
+                        backgroundColor: THEME.hover,
                       }}
                     >
-                      <td className="px-3 py-4 text-slate-500">
+                      <td className="px-3 py-4 text-[#746D5E]">
                         {index + 1}
                       </td>
 
@@ -503,7 +625,7 @@ function InvoiceDocument({ invoice }) {
                         {productName(item)}
                       </td>
 
-                      <td className="px-3 py-4 text-slate-500">
+                      <td className="px-3 py-4 text-[#746D5E]">
                         {item?.imei ||
                           item?.serialNumber ||
                           item?.serial ||
@@ -531,9 +653,10 @@ function InvoiceDocument({ invoice }) {
                   >
                     <td
                       colSpan={6}
-                      className="px-3 py-10 text-center text-slate-500"
+                      className="px-3 py-10 text-center text-[#746D5E]"
                     >
-                      No product details available for this invoice.
+                      No product details available for this
+                      invoice.
                     </td>
                   </motion.tr>
                 )}
@@ -543,52 +666,78 @@ function InvoiceDocument({ invoice }) {
         </div>
       </section>
 
-      {/* Totals */}
+      {/* TOTALS */}
+
       <section className="relative mt-6 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-        <div className="max-w-xs text-xs leading-5 text-slate-500">
-          <p className="font-bold text-slate-800">
+        <div className="max-w-xs text-xs leading-5 text-[#746D5E]">
+          <p className="font-bold text-[#171914]">
             Thank you for your purchase!
           </p>
 
           <p className="mt-1">
-            Keep this invoice for your warranty and service records.
+            Keep this invoice for your warranty and
+            service records.
           </p>
 
           <p className="mt-3">
-            Computer-generated invoice. No signature required.
+            Computer-generated invoice. No signature
+            required.
           </p>
         </div>
 
         <motion.div
           key={`${idOf(invoice)}-${totalOf(invoice)}`}
-          initial={{ opacity: 0, y: 12, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ type: "spring", stiffness: 180, damping: 20 }}
-          className="w-full space-y-3 rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-amber-50/50 p-5 shadow-sm sm:max-w-xs"
+          initial={{
+            opacity: 0,
+            y: 12,
+            scale: 0.97,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+            scale: 1,
+          }}
+          whileHover={{
+            y: -3,
+            boxShadow:
+              "0 12px 25px rgba(184,134,11,0.10)",
+          }}
+          transition={spring}
+          className="w-full space-y-3 rounded-2xl border border-[#E6D9BD] bg-[#FFFEFA] p-5 shadow-sm sm:max-w-xs"
         >
-          <div className="flex justify-between gap-4 text-sm text-slate-500">
+          <div className="flex justify-between gap-4 text-sm text-[#746D5E]">
             <span>Subtotal</span>
             <span>{money(subtotal)}</span>
           </div>
 
-          <div className="flex justify-between gap-4 text-sm text-slate-500">
+          <div className="flex justify-between gap-4 text-sm text-[#746D5E]">
             <span>Discount</span>
             <span>{money(discount)}</span>
           </div>
 
           {invoice?.taxAmount != null && (
-            <div className="flex justify-between gap-4 text-sm text-slate-500">
+            <div className="flex justify-between gap-4 text-sm text-[#746D5E]">
               <span>Tax</span>
               <span>{money(invoice.taxAmount)}</span>
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-4 border-t-2 border-slate-900 pt-4">
-            <span className="font-bold">Total Amount</span>
+          <div className="flex items-center justify-between gap-4 border-t-2 border-[#171914] pt-4">
+            <span className="font-bold">
+              Total Amount
+            </span>
+
             <motion.span
               key={totalOf(invoice)}
-              initial={{ scale: 1.2, color: "#d97706" }}
-              animate={{ scale: 1, color: "#0f172a" }}
+              initial={{
+                scale: 1.15,
+                color: "#B8860B",
+              }}
+              animate={{
+                scale: 1,
+                color: "#171914",
+              }}
+              transition={spring}
               className="text-xl font-black"
             >
               {money(totalOf(invoice))}
@@ -597,24 +746,35 @@ function InvoiceDocument({ invoice }) {
         </motion.div>
       </section>
 
-      <footer className="relative mt-8 border-t border-dashed border-slate-300 pt-4 text-center text-[10px] text-slate-400">
+      <footer className="relative mt-8 border-t border-dashed border-[#E6D9BD] pt-4 text-center text-[10px] text-[#948A76]">
         GANESH MOBILE SHOP · Bhopal, Madhya Pradesh
       </footer>
     </article>
   );
 }
 
-/* ================= MAIN PAGE ================= */
+// ==================================================
+// MAIN INVOICES PAGE
+// ==================================================
 
 export default function Invoices() {
   const [invoices, setInvoices] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsLoading, setDetailsLoading] =
+    useState(false);
+
   const [error, setError] = useState("");
-  const [selectorOpen, setSelectorOpen] = useState(false);
-  const [invoiceSearch, setInvoiceSearch] = useState("");
-  const [downloading, setDownloading] = useState(false);
+  const [selectorOpen, setSelectorOpen] =
+    useState(false);
+
+  const [invoiceSearch, setInvoiceSearch] =
+    useState("");
+
+  const [downloading, setDownloading] =
+    useState(false);
+
+  // LOAD INVOICES
 
   const loadInvoices = useCallback(async () => {
     try {
@@ -632,7 +792,9 @@ export default function Invoices() {
           [];
 
       if (!Array.isArray(records)) {
-        throw new Error("Unexpected response from the invoice API.");
+        throw new Error(
+          "Unexpected response from the invoice API."
+        );
       }
 
       setInvoices(records);
@@ -643,8 +805,9 @@ export default function Invoices() {
         const currentId = idOf(current);
 
         return (
-          records.find((item) => idOf(item) === currentId) ||
-          records[0]
+          records.find(
+            (item) => idOf(item) === currentId
+          ) || records[0]
         );
       });
     } catch (err) {
@@ -662,8 +825,12 @@ export default function Invoices() {
     loadInvoices();
   }, [loadInvoices]);
 
+  // SEARCH INVOICES
+
   const visibleInvoices = useMemo(() => {
-    const query = invoiceSearch.trim().toLowerCase();
+    const query = invoiceSearch
+      .trim()
+      .toLowerCase();
 
     if (!query) return invoices;
 
@@ -673,22 +840,30 @@ export default function Invoices() {
         nameOf(invoice),
         phoneOf(invoice),
       ].some((value) =>
-        String(value).toLowerCase().includes(query)
+        String(value)
+          .toLowerCase()
+          .includes(query)
       )
     );
   }, [invoices, invoiceSearch]);
+
+  // SELECT INVOICE
 
   const chooseInvoice = async (invoice) => {
     setSelected(invoice);
     setSelectorOpen(false);
 
     const id = idOf(invoice);
+
     if (!id) return;
 
     try {
       setDetailsLoading(true);
 
-      const response = await api.get(`/invoices/${id}`);
+      const response = await api.get(
+        `/invoices/${id}`
+      );
+
       const data = response.data;
 
       const details =
@@ -697,7 +872,10 @@ export default function Invoices() {
         data?.data ||
         data;
 
-      if (details && typeof details === "object") {
+      if (
+        details &&
+        typeof details === "object"
+      ) {
         setSelected(details);
       }
     } catch (err) {
@@ -709,6 +887,8 @@ export default function Invoices() {
       setDetailsLoading(false);
     }
   };
+
+  // DOWNLOAD PDF
 
   const downloadPDF = async () => {
     if (!selected) return;
@@ -723,17 +903,24 @@ export default function Invoices() {
     try {
       setDownloading(true);
 
-      const response = await api.get(`/invoices/${id}/pdf`, {
-        responseType: "blob",
-      });
+      const response = await api.get(
+        `/invoices/${id}/pdf`,
+        {
+          responseType: "blob",
+        }
+      );
 
-      const blob = new Blob([response.data], {
-        type:
-          response.headers["content-type"] ||
-          "application/pdf",
-      });
+      const blob = new Blob(
+        [response.data],
+        {
+          type:
+            response.headers["content-type"] ||
+            "application/pdf",
+        }
+      );
 
       const url = URL.createObjectURL(blob);
+
       const link = document.createElement("a");
 
       link.href = url;
@@ -758,42 +945,63 @@ export default function Invoices() {
     }
   };
 
+  // ==================================================
+  // PAGE UI
+  // ==================================================
+
   return (
-    <div className="min-h-screen bg-[#f6f7fb] text-slate-900">
+    <div
+      className="min-h-screen w-full text-[#171914]"
+      style={{
+        backgroundColor: THEME.page,
+      }}
+    >
       <Sidebar />
 
-      <main className="min-h-screen px-4 py-6 sm:px-6 lg:ml-[250px] lg:px-8">
+      <main
+        className="min-h-screen px-4 py-6 sm:px-6 lg:ml-[250px] lg:px-8"
+        style={{
+          backgroundColor: THEME.page,
+        }}
+      >
         <motion.div
           variants={pageAnimation}
           initial="hidden"
           animate="visible"
-          className="mx-auto max-w-[1180px] space-y-6"
+          className="mx-auto max-w-[1600px] space-y-6"
         >
-          {/* Page heading */}
+          {/* PAGE HEADING */}
+
           <motion.header
             variants={itemAnimation}
             className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
           >
             <div>
-              <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-amber-700">
+              <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#B8860B]">
                 <Sparkles size={14} />
                 Sales Management
               </div>
 
-              <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
+              <h1 className="text-3xl font-black tracking-tight text-[#171914] sm:text-4xl">
                 Invoice Details
               </h1>
 
-              <p className="mt-2 text-sm text-slate-500">
-                Manage, preview, print, and download customer invoices.
+              <p className="mt-2 text-sm text-[#746D5E]">
+                Manage, preview, print, and download
+                customer invoices.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <AnimatedButton onClick={loadInvoices} disabled={loading}>
+              <AnimatedButton
+                onClick={loadInvoices}
+                disabled={loading}
+              >
                 <RefreshCw
                   size={16}
-                  className={loading ? "animate-spin" : ""}
+                  className={
+                    loading ? "animate-spin" : ""
+                  }
                 />
                 Refresh
               </AnimatedButton>
@@ -811,20 +1019,25 @@ export default function Invoices() {
             </div>
           </motion.header>
 
-          {/* Invoice controls */}
+          {/* INVOICE CONTROLS */}
+
           <motion.section
             variants={itemAnimation}
-            whileHover={{ y: -2 }}
-            transition={{ duration: 0.2 }}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+            whileHover={{
+              y: -3,
+              boxShadow:
+                "0 12px 30px rgba(184,134,11,0.08)",
+            }}
+            transition={spring}
+            className="rounded-2xl border border-[#E6D9BD] bg-[#FFFEFA] p-4 shadow-sm sm:p-5"
           >
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div>
-                <h2 className="text-sm font-bold">
+                <h2 className="text-sm font-bold text-[#171914]">
                   Selected Invoice
                 </h2>
 
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[#746D5E]">
                   {selected
                     ? `${numberOf(selected)} · ${nameOf(selected)}`
                     : "Choose an invoice to preview its details."}
@@ -832,25 +1045,35 @@ export default function Invoices() {
               </div>
 
               <div className="flex flex-wrap gap-2">
+                {/* INVOICE SELECTOR */}
+
                 <div className="relative">
                   <motion.button
                     type="button"
                     whileTap={{ scale: 0.97 }}
                     onClick={() =>
-                      setSelectorOpen((open) => !open)
+                      setSelectorOpen(
+                        (open) => !open
+                      )
                     }
                     disabled={!invoices.length}
-                    className="inline-flex min-w-44 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold hover:border-amber-400 disabled:opacity-50"
+                    className="inline-flex min-w-44 items-center justify-between gap-3 rounded-xl border border-[#E6D9BD] bg-[#FFFEFA] px-3 py-2.5 text-sm font-semibold text-[#171914] transition hover:border-[#D4AF37] hover:bg-[#FFF8E5] disabled:opacity-50"
                   >
                     <span className="flex items-center gap-2">
                       <FileText size={16} />
+
                       {selected
                         ? numberOf(selected)
                         : "Select invoice"}
                     </span>
 
                     <motion.span
-                      animate={{ rotate: selectorOpen ? 180 : 0 }}
+                      animate={{
+                        rotate: selectorOpen
+                          ? 180
+                          : 0,
+                      }}
+                      transition={spring}
                     >
                       <ChevronDown size={15} />
                     </motion.span>
@@ -859,63 +1082,92 @@ export default function Invoices() {
                   <AnimatePresence>
                     {selectorOpen && (
                       <motion.div
-                        initial={{ opacity: 0, y: 12, scale: 0.97 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 8, scale: 0.97 }}
-                        transition={{ duration: 0.18 }}
-                        className="absolute right-0 z-30 mt-2 w-80 max-w-[85vw] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl"
+                        initial={{
+                          opacity: 0,
+                          y: 10,
+                          scale: 0.97,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                          scale: 1,
+                        }}
+                        exit={{
+                          opacity: 0,
+                          y: 8,
+                          scale: 0.97,
+                        }}
+                        transition={{
+                          duration: 0.2,
+                        }}
+                        className="absolute right-0 z-30 mt-2 w-80 max-w-[85vw] overflow-hidden rounded-xl border border-[#E6D9BD] bg-[#FFFEFA] shadow-xl"
                       >
-                        <div className="border-b border-slate-100 p-3">
+                        <div className="border-b border-[#EEE5D2] p-3">
                           <div className="relative">
                             <Search
                               size={15}
-                              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#948A76]"
                             />
 
                             <input
                               value={invoiceSearch}
                               onChange={(event) =>
-                                setInvoiceSearch(event.target.value)
+                                setInvoiceSearch(
+                                  event.target.value
+                                )
                               }
                               placeholder="Search invoice or customer..."
-                              className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-xs outline-none focus:border-amber-400"
+                              className="w-full rounded-lg border border-[#E6D9BD] bg-[#F9F6EE] py-2 pl-9 pr-3 text-xs outline-none focus:border-[#D4AF37]"
                             />
                           </div>
                         </div>
 
                         <div className="max-h-64 overflow-y-auto p-1">
-                          {visibleInvoices.map((invoice) => (
-                            <motion.button
-                              key={
-                                idOf(invoice) || numberOf(invoice)
-                              }
-                              type="button"
-                              whileHover={{ x: 3 }}
-                              onClick={() => chooseInvoice(invoice)}
-                              className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-3 text-left ${
-                                idOf(invoice) === idOf(selected)
-                                  ? "bg-amber-50"
-                                  : "hover:bg-slate-50"
-                              }`}
-                            >
-                              <span className="min-w-0">
-                                <span className="block truncate text-sm font-semibold">
-                                  {numberOf(invoice)}
+                          {visibleInvoices.map(
+                            (invoice) => (
+                              <motion.button
+                                key={
+                                  idOf(invoice) ||
+                                  numberOf(invoice)
+                                }
+                                type="button"
+                                whileHover={{
+                                  x: 3,
+                                  backgroundColor:
+                                    THEME.hover,
+                                }}
+                                onClick={() =>
+                                  chooseInvoice(invoice)
+                                }
+                                className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-3 text-left ${
+                                  idOf(invoice) ===
+                                  idOf(selected)
+                                    ? "bg-[#FFF6D9]"
+                                    : ""
+                                }`}
+                              >
+                                <span className="min-w-0">
+                                  <span className="block truncate text-sm font-semibold">
+                                    {numberOf(invoice)}
+                                  </span>
+
+                                  <span className="mt-1 block truncate text-xs text-[#746D5E]">
+                                    {nameOf(invoice)}
+                                  </span>
                                 </span>
 
-                                <span className="mt-1 block truncate text-xs text-slate-500">
-                                  {nameOf(invoice)}
+                                <span className="shrink-0 text-xs font-bold">
+                                  {money(
+                                    totalOf(invoice)
+                                  )}
                                 </span>
-                              </span>
+                              </motion.button>
+                            )
+                          )}
 
-                              <span className="shrink-0 text-xs font-bold">
-                                {money(totalOf(invoice))}
-                              </span>
-                            </motion.button>
-                          ))}
-
-                          {visibleInvoices.length === 0 && (
-                            <p className="p-4 text-center text-xs text-slate-500">
+                          {visibleInvoices.length ===
+                            0 && (
+                            <p className="p-4 text-center text-xs text-[#746D5E]">
                               No matching invoices.
                             </p>
                           )}
@@ -925,40 +1177,69 @@ export default function Invoices() {
                   </AnimatePresence>
                 </div>
 
+                {/* PRINT */}
+
                 <AnimatedButton
-                  onClick={() => window.print()}
+                  onClick={() =>
+                    window.print()
+                  }
                   disabled={!selected}
                 >
                   <Printer size={16} />
                   Print
                 </AnimatedButton>
 
+                {/* DOWNLOAD */}
+
                 <AnimatedButton
                   variant="dark"
                   onClick={downloadPDF}
-                  disabled={!selected || downloading}
+                  disabled={
+                    !selected || downloading
+                  }
                 >
                   <Download size={16} />
-                  {downloading ? "Downloading..." : "Download PDF"}
+
+                  {downloading
+                    ? "Downloading..."
+                    : "Download PDF"}
                 </AnimatedButton>
               </div>
             </div>
           </motion.section>
 
-          {/* Error */}
+          {/* ERROR MESSAGE */}
+
           <AnimatePresence>
             {error && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
+                initial={{
+                  opacity: 0,
+                  height: 0,
+                }}
+                animate={{
+                  opacity: 1,
+                  height: "auto",
+                }}
+                exit={{
+                  opacity: 0,
+                  height: 0,
+                }}
+                className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
               >
-                <AlertCircle size={18} className="shrink-0" />
+                <AlertCircle
+                  size={18}
+                  className="shrink-0"
+                />
 
                 <div>
-                  <p className="font-bold">Unable to load invoices</p>
-                  <p className="mt-1">{error}</p>
+                  <p className="font-bold">
+                    Unable to load invoices
+                  </p>
+
+                  <p className="mt-1">
+                    {error}
+                  </p>
                 </div>
 
                 <button
@@ -972,79 +1253,114 @@ export default function Invoices() {
             )}
           </AnimatePresence>
 
-          {/* Invoice document */}
+          {/* INVOICE PREVIEW */}
+
           <motion.section
             variants={itemAnimation}
             whileHover={{
               y: -2,
-              boxShadow: "0 24px 60px rgba(15,23,42,0.08)",
+              boxShadow:
+                "0 16px 35px rgba(184,134,11,0.08)",
             }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+            transition={spring}
+            className="overflow-hidden rounded-2xl border border-[#E6D9BD] bg-[#FFFEFA] shadow-sm"
           >
             {loading ? (
               <div className="space-y-5 p-8">
-                <div className="h-10 w-64 animate-pulse rounded-lg bg-slate-100" />
-                <div className="h-24 animate-pulse rounded-xl bg-slate-100" />
-                <div className="h-40 animate-pulse rounded-xl bg-slate-100" />
-                <div className="h-20 animate-pulse rounded-xl bg-slate-100" />
+                <div className="h-10 w-64 animate-pulse rounded-lg bg-[#F4F0E6]" />
+
+                <div className="h-24 animate-pulse rounded-xl bg-[#F4F0E6]" />
+
+                <div className="h-40 animate-pulse rounded-xl bg-[#F4F0E6]" />
+
+                <div className="h-20 animate-pulse rounded-xl bg-[#F4F0E6]" />
               </div>
             ) : selected ? (
               <>
                 {detailsLoading && (
-                  <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-3 text-xs text-slate-500">
-                    <RefreshCw size={14} className="animate-spin" />
+                  <div className="flex items-center gap-2 border-b border-[#EEE5D2] px-6 py-3 text-xs text-[#746D5E]">
+                    <RefreshCw
+                      size={14}
+                      className="animate-spin"
+                    />
                     Loading invoice details...
                   </div>
                 )}
 
                 <AnimatePresence mode="wait">
                   <motion.div
-                    key={idOf(selected) || numberOf(selected)}
-                    initial={{ opacity: 0, y: 16, rotateX: 2 }}
-                    animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                    key={
+                      idOf(selected) ||
+                      numberOf(selected)
+                    }
+                    initial={{
+                      opacity: 0,
+                      y: 15,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: -10,
+                    }}
                     transition={{
                       duration: 0.35,
                       ease: "easeOut",
                     }}
-                    style={{ transformPerspective: 1200 }}
                   >
-                    <InvoiceDocument invoice={selected} />
+                    <InvoiceDocument
+                      invoice={selected}
+                    />
                   </motion.div>
                 </AnimatePresence>
               </>
             ) : (
+              /* EMPTY STATE */
+
               <motion.div
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{
+                  opacity: 0,
+                  scale: 0.97,
+                }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                }}
                 className="flex min-h-[380px] flex-col items-center justify-center px-6 py-12 text-center"
               >
                 <motion.div
-                  animate={{ y: [0, -7, 0], rotate: [0, 3, -3, 0] }}
+                  animate={{
+                    y: [0, -6, 0],
+                    rotate: [0, 3, -3, 0],
+                  }}
                   transition={{
                     duration: 3,
                     repeat: Infinity,
                     ease: "easeInOut",
                   }}
-                  className="rounded-2xl bg-amber-50 p-5 text-amber-700"
+                  className="rounded-2xl bg-[#FFF6D9] p-5 text-[#9B7613]"
                 >
                   <FileText size={34} />
                 </motion.div>
 
-                <h2 className="mt-5 text-xl font-bold">
+                <h2 className="mt-5 text-xl font-bold text-[#171914]">
                   No invoice available
                 </h2>
 
-                <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-                  Create a sale first. When your backend returns invoice
-                  records, you can select one here and preview its details.
+                <p className="mt-2 max-w-md text-sm leading-6 text-[#746D5E]">
+                  Create a sale first. When your
+                  backend returns invoice records,
+                  you can select one here and preview
+                  its details.
                 </p>
 
                 <AnimatedButton
                   variant="gold"
                   onClick={() => {
-                    window.location.href = "/sales";
+                    window.location.href =
+                      "/sales";
                   }}
                   className="mt-5"
                 >
@@ -1054,7 +1370,9 @@ export default function Invoices() {
               </motion.div>
             )}
 
-            <div className="flex flex-col justify-between gap-2 border-t border-slate-100 px-5 py-3 text-xs text-slate-400 sm:flex-row">
+            {/* FOOTER */}
+
+            <div className="flex flex-col justify-between gap-2 border-t border-[#EEE5D2] px-5 py-3 text-xs text-[#948A76] sm:flex-row">
               <span>
                 {selected
                   ? `Invoice ${numberOf(selected)}`
@@ -1063,14 +1381,18 @@ export default function Invoices() {
 
               <span>
                 {invoices.length} invoice record
-                {invoices.length === 1 ? "" : "s"} available
+                {invoices.length === 1
+                  ? ""
+                  : "s"}{" "}
+                available
               </span>
             </div>
           </motion.section>
         </motion.div>
       </main>
 
-      {/* Print styles */}
+      {/* PRINT STYLES */}
+
       <style>{`
         @media print {
           @page {
